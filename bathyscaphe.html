@@ -20,6 +20,7 @@
     --sodium: #ffb547;
     --sodium-ink: #241500;
     --lume: #6fe3cf;
+    --pearl: #ffe9f2;
     --breach: #ff6b5b;
     --display: 'Big Shoulders Stencil Display', 'Saira Stencil One', Impact, 'Arial Narrow', sans-serif;
     --body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -28,7 +29,7 @@
   [hidden] { display: none !important; }
   html, body { height: 100%; }
   body { background: var(--abyss); color: var(--ink); font-family: var(--body); font-size: 15px; overflow: hidden; }
-  button, input, textarea { font: inherit; color: inherit; }
+  button, input, textarea, select { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--lume); outline-offset: 2px; }
 
   #app {
@@ -46,9 +47,13 @@
   .gauge { display: flex; flex-direction: column; gap: 4px; }
   .label { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .val { font-family: var(--mono); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
+  .val.pearls { color: var(--pearl); }
   .hull { display: flex; gap: 5px; align-items: center; height: 20px; }
   .hull i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--sodium); box-sizing: border-box; background: var(--sodium); transition: background 0.2s, border-color 0.2s; }
+  .hull i.half { background: linear-gradient(90deg, var(--sodium) 50%, transparent 50%); }
   .hull i.off { background: transparent; border-color: var(--breach); opacity: 0.55; }
+  .hull.hit i { animation: hit 0.35s; }
+  @keyframes hit { 50% { transform: scale(1.35); } }
   .tools { display: flex; gap: 6px; flex-wrap: wrap; }
 
   .btn {
@@ -67,50 +72,66 @@
   .meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   #rZone { color: var(--lume); }
   .question { margin: 0; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.35; font-weight: 700; text-wrap: balance; max-height: 6.9em; overflow: auto; }
+  .question.idle { font-weight: 400; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
+  .question.alarm { color: var(--breach); }
   .hatch-form { display: grid; gap: 6px; padding-bottom: 4px; }
   .hatch-row { display: flex; gap: 8px; }
   .hatch-row input { flex: 1; min-width: 0; }
   .clock { height: 4px; margin-inline: -16px; background: rgba(255, 255, 255, 0.05); }
-  #clockFill { height: 100%; background: var(--sodium); transform-origin: left; }
+  #clockFill { height: 100%; background: var(--sodium); transform-origin: left; transform: scaleX(0); }
 
   /* ---------- Stage ---------- */
-  .stage { position: relative; min-height: 240px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #04101c; touch-action: manipulation; }
-  #sea { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #gaps { position: absolute; inset: 0; pointer-events: none; }
-  .gap {
-    position: absolute; top: 0; pointer-events: auto; box-sizing: border-box; transform: translateY(-50%);
+  .stage { position: relative; min-height: 240px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #04101c; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #sea { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #labels { position: absolute; inset: 0; pointer-events: none; }
+  .tag {
+    position: absolute; top: 0; left: 0; pointer-events: auto; box-sizing: border-box;
     display: flex; flex-direction: column; align-items: center; gap: 2px;
     padding: 6px 8px 7px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: rgba(3, 12, 20, 0.84);
     font-size: 14px; line-height: 1.25; text-align: center; overflow-wrap: break-word; hyphens: auto; cursor: pointer;
     transition: border-color 0.15s, box-shadow 0.15s, opacity 0.25s, color 0.15s;
   }
-  .gap .k { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
-  .gap.aim { border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.16), 0 0 26px rgba(255, 181, 71, 0.22); }
-  .gap.right { border-color: var(--lume); color: #eafffb; box-shadow: 0 0 24px rgba(111, 227, 207, 0.45); }
-  .gap.wrong { border-color: var(--breach); color: #ffd9d4; }
-  .gap.sealed { opacity: 0.25; text-decoration: line-through; pointer-events: none; }
-  .gap.hatch { cursor: default; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sodium); border-color: rgba(255, 181, 71, 0.5); }
+  .tag .k { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+  .tag.orb { border-radius: 999px; padding: 8px 14px; border-color: rgba(111, 227, 207, 0.55); background: rgba(3, 18, 24, 0.86); box-shadow: 0 0 18px rgba(111, 227, 207, 0.25); }
+  .tag.aim { border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.16), 0 0 26px rgba(255, 181, 71, 0.22); }
+  .tag.right { border-color: var(--lume); color: #eafffb; box-shadow: 0 0 24px rgba(111, 227, 207, 0.45); }
+  .tag.wrong { border-color: var(--breach); color: #ffd9d4; }
+  .tag.sealed { opacity: 0.22; text-decoration: line-through; pointer-events: none; }
+  .tag.hatch { cursor: default; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sodium); border-color: rgba(255, 181, 71, 0.5); }
 
   .toast {
-    position: absolute; top: 12px; left: 50%; transform: translateX(-50%); pointer-events: none;
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 2;
     font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
     padding: 6px 12px; border-radius: 999px; background: rgba(3, 12, 20, 0.85); border: 1px solid var(--lume); color: var(--lume);
   }
+  .toast.low { top: 58px; }
+  .toast.hot { border-color: var(--sodium); color: var(--sodium); }
+  .boss-bar { position: absolute; top: 12px; left: 32px; right: 16px; display: grid; gap: 5px; pointer-events: none; }
+  .boss-bar .label { color: #ffb3a8; }
+  .boss-track { height: 8px; border-radius: 4px; background: rgba(255, 107, 91, 0.15); border: 1px solid rgba(255, 107, 91, 0.4); overflow: hidden; }
+  #bossFill { height: 100%; background: var(--breach); transform-origin: left; transition: transform 0.35s; }
+  .banner {
+    position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); width: min(420px, calc(100% - 28px)); box-sizing: border-box; pointer-events: none;
+    background: rgba(8, 26, 39, 0.94); border: 1px solid var(--breach); border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px; text-align: center;
+  }
+  .banner p { margin: 0; }
+  .banner .label { color: var(--breach); }
   .crash {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(420px, calc(100% - 28px)); box-sizing: border-box;
-    background: rgba(8, 26, 39, 0.95); border: 1px solid var(--breach); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px;
+    background: rgba(8, 26, 39, 0.95); border: 1px solid var(--breach); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; overflow: hidden;
   }
   .crash p { margin: 0; }
   .crash .label { color: var(--breach); }
-  .crash-ans { font-size: 19px; font-weight: 700; color: var(--lume); overflow-wrap: anywhere; }
-  .crash-note { font-size: 13px; color: var(--muted); }
+  .ans { font-size: 19px; font-weight: 700; color: var(--lume); overflow-wrap: anywhere; }
+  .note { font-size: 13px; color: var(--muted); }
   .crash .btn { justify-self: start; margin-top: 4px; }
+  .crash-timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--breach); transform-origin: left; }
   .hint { position: absolute; right: 12px; bottom: 8px; margin: 0; font-family: var(--mono); font-size: 10.5px; color: rgba(160, 195, 205, 0.6); pointer-events: none; }
 
   /* ---------- Overlays ---------- */
   .overlay { position: fixed; inset: 0; z-index: 10; overflow: auto; display: flex; background: rgba(2, 7, 12, 0.6); backdrop-filter: blur(3px); padding-inline: 16px; padding-block: 24px; }
   .sheet {
-    margin: auto; width: 100%; max-width: 640px; box-sizing: border-box; display: grid; gap: 16px;
+    margin: auto; width: 100%; max-width: 660px; box-sizing: border-box; display: grid; gap: 18px;
     background: var(--panel); border: 1px solid var(--line-strong); border-radius: 16px; padding: 24px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
   }
   .sheet.small { max-width: 380px; }
@@ -118,14 +139,22 @@
   .sheet h1 { font-size: clamp(44px, 9vw, 64px); color: var(--sodium); }
   .sheet h2 { font-size: clamp(32px, 6vw, 44px); }
   .sheet p { margin: 0; line-height: 1.5; }
-  .lede { color: var(--ink); max-width: 60ch; }
-  .lede em { color: var(--sodium); font-style: normal; font-weight: 700; }
+  .stack { display: grid; gap: 8px; }
+  .lede { max-width: 62ch; }
+  .features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; font-size: 13.5px; color: var(--muted); }
+  .features b { color: var(--ink); }
   .field { display: grid; gap: 6px; }
   .field input[type=text], .field textarea, .hatch-row input {
     background: var(--field); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px 12px; box-sizing: border-box; width: 100%;
   }
   .field input:focus, .field textarea:focus, .hatch-row input:focus { outline: none; border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.15); }
-  .field textarea { font-family: var(--mono); font-size: 12.5px; line-height: 1.55; min-height: 200px; resize: vertical; }
+  .field textarea { font-family: var(--mono); font-size: 12.5px; line-height: 1.55; min-height: 170px; resize: vertical; }
+  .step { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(4, 19, 32, 0.6); }
+  .step-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .step-head .label { color: var(--sodium); }
+  .count { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .count select { padding: 5px 8px; background: var(--field); border: 1px solid var(--line-strong); border-radius: 6px; }
+  .prompt { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; padding: 10px 12px; border-radius: 8px; background: var(--field); border: 1px dashed var(--line-strong); user-select: text; }
   .help { font-size: 13px; color: var(--muted); }
   .help code { font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--field); padding: 1px 5px; border-radius: 4px; }
   .status { font-family: var(--mono); font-size: 12px; color: var(--lume); }
@@ -139,20 +168,34 @@
   .seg input:focus-visible + span { outline: 2px solid var(--lume); outline-offset: -2px; }
   .check { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
   .check input { accent-color: var(--sodium); width: 16px; height: 16px; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; }
-  .keys { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.7; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .keys { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.8; }
   kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; color: var(--ink); }
+  .copy-note { font-size: 12px; color: var(--lume); }
 
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .stat { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
   .stat .val { font-size: 20px; }
   .record { font-family: var(--mono); font-size: 12px; color: var(--sodium); }
   .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 240px; overflow: auto; }
   .log li { display: grid; gap: 2px; padding: 8px 12px; border-left: 3px solid var(--breach); background: var(--field); border-radius: 0 8px 8px 0; }
+  .log li.clean { border-left-color: var(--lume); color: var(--lume); }
   .log .q { font-size: 14px; }
   .log .a { font-size: 14px; font-weight: 700; color: var(--lume); }
   .log .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .clean { color: var(--lume); font-size: 14px; }
+
+  .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .card {
+    display: grid; gap: 6px; align-content: start; text-align: left; padding: 14px; border-radius: 12px; cursor: pointer;
+    background: var(--field); border: 1px solid var(--line-strong); transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover:not(:disabled) { border-color: var(--sodium); transform: translateY(-2px); }
+  .card:disabled { cursor: default; opacity: 0.45; transform: none; }
+  .card.bought { opacity: 1; border-color: var(--lume); }
+  .card .name { font-weight: 700; font-size: 15px; }
+  .card .desc { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .card .cost { font-family: var(--mono); font-size: 12px; color: var(--pearl); }
+  .card.bought .cost { color: var(--lume); }
 
   @media (max-width: 560px) {
     .wide { display: none !important; }
@@ -160,7 +203,8 @@
     .gauges { gap: 6px 14px; }
     .sheet { padding: 18px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
-    .gap { font-size: 12.5px; padding: 5px 5px 6px; }
+    .shop, .features { grid-template-columns: 1fr; }
+    .tag { font-size: 12.5px; padding: 5px 5px 6px; }
     .hint { display: none; }
   }
   @media (max-height: 620px) { .question { max-height: 4.2em; } }
@@ -175,12 +219,13 @@
     <div class="gauges">
       <div class="gauge"><span class="label">Depth</span><span class="val" id="gDepth">0 m</span></div>
       <div class="gauge wide"><span class="label">Pressure</span><span class="val" id="gPress">1 atm</span></div>
-      <div class="gauge"><span class="label">Hull</span><span class="hull" id="gHull"><i></i><i></i><i></i></span></div>
+      <div class="gauge"><span class="label">Hull</span><span class="hull" id="gHull"></span></div>
+      <div class="gauge"><span class="label">Pearls</span><span class="val pearls" id="gPearls">0</span></div>
       <div class="gauge"><span class="label">Streak</span><span class="val" id="gStreak">0</span></div>
       <div class="gauge wide"><span class="label">Score</span><span class="val" id="gScore">0</span></div>
     </div>
     <div class="tools">
-      <button class="btn" id="btnSonar" type="button" title="Sonar seals off wrong passages (S)">Sonar <b id="sonarCount">1</b></button>
+      <button class="btn" id="btnSonar" type="button" title="Sonar knocks out wrong answers (S)">Sonar <b id="sonarCount">1</b></button>
       <button class="btn" id="btnSound" type="button" aria-pressed="true">Sound on</button>
       <button class="btn" id="btnPause" type="button">Pause</button>
     </div>
@@ -188,7 +233,7 @@
 
   <section class="readout" aria-live="polite">
     <div class="meta"><span id="rZone">Sunlight zone</span><span id="rCount">Dive plan</span></div>
-    <p class="question" id="rQuestion">Paste your questions to plot a dive.</p>
+    <p class="question idle" id="rQuestion">Paste your questions to plot a dive.</p>
     <form class="hatch-form" id="hatchForm" hidden autocomplete="off">
       <label class="label" for="hatchInput">Sealed hatch · type the answer to open it</label>
       <div class="hatch-row">
@@ -201,54 +246,89 @@
 
   <main class="stage" id="stage">
     <canvas id="sea" aria-hidden="true"></canvas>
-    <div id="gaps" lang="en"></div>
-    <div class="toast" id="toast" hidden></div>
-    <div class="crash" id="crash" hidden role="status">
-      <p class="label" id="crashTitle">Impact · hull 2 of 3</p>
-      <p class="crash-note">The open passage was marked</p>
-      <p class="crash-ans" id="crashAns"></p>
-      <p class="crash-note" id="crashNote">This question will come around again before you reach the bottom.</p>
-      <button class="btn primary" id="btnContinue" type="button">Continue</button>
+    <div id="labels" lang="en"></div>
+    <div class="boss-bar" id="bossBar" hidden>
+      <span class="label" id="bossName">Giant squid</span>
+      <div class="boss-track"><div id="bossFill"></div></div>
     </div>
-    <p class="hint" id="hint">← → steer · space to surge · 1–4 pick a passage · S sonar</p>
+    <div class="toast" id="toast" hidden></div>
+    <div class="banner" id="banner" hidden>
+      <p class="label" id="bannerTitle">Lashed</p>
+      <p class="note">The right answer was</p>
+      <p class="ans" id="bannerAns"></p>
+    </div>
+    <div class="crash" id="crash" hidden role="status">
+      <p class="label" id="crashTitle">Impact</p>
+      <p class="note">The open passage was marked</p>
+      <p class="ans" id="crashAns"></p>
+      <p class="note" id="crashNote">This question will come around again before you reach the bottom.</p>
+      <button class="btn primary" id="btnContinue" type="button">Continue</button>
+      <div class="crash-timer" id="crashTimer"></div>
+    </div>
+    <p class="hint" id="hint">← → steer · space surge · 1–4 pick · S sonar</p>
   </main>
 </div>
 
 <!-- Dive plan (setup) -->
 <div class="overlay" id="setup">
   <form class="sheet" id="setupForm" autocomplete="off">
-    <div style="display:grid;gap:10px">
+    <div class="stack">
       <span class="label">Dive plan</span>
       <h1>Bathyscaphe</h1>
-      <p class="lede">Every question is a rock shelf rising out of the dark, with a passage cut for each possible answer. Steer through the one marked with the right answer to sink deeper. Wrong passages dent the hull and send the question back into the queue. Clear every question to touch down at <em>Challenger Deep, 10,935 m</em>.</p>
+      <p class="lede">Pilot a deep-sea sub to the bottom of the ocean. Your questions are the obstacles, and only right answers get you deeper.</p>
+      <ul class="features">
+        <li><b>Open water.</b> Weave past rocks and anglerfish, scoop up pearls.</li>
+        <li><b>Rock shelves.</b> Steer through the passage marked with the right answer.</li>
+        <li><b>Sea monsters.</b> Swim into the right answer to fire a flare at a giant squid.</li>
+        <li><b>Refits.</b> Spend pearls on armour, a brighter lamp, thrusters and more.</li>
+      </ul>
     </div>
+
     <div class="field">
       <label class="label" for="topic">Topic</label>
-      <input type="text" id="topic" maxlength="60" placeholder="e.g. Cell biology, French verbs, WWII">
+      <input type="text" id="topic" maxlength="60" placeholder="e.g. Cell biology, French verbs, World War II">
     </div>
-    <div class="field">
-      <label class="label" for="deck">Questions and answers</label>
-      <textarea id="deck" spellcheck="false" placeholder="What is the powerhouse of the cell? | Mitochondria"></textarea>
-      <p class="help">One per line as <code>question | answer</code>. Tab-separated rows (spreadsheets, Quizlet exports), <code>Q:</code>/<code>A:</code> pairs, and <code>question = answer</code> also work. Add more <code>| wrong option</code> fields to write your own decoys; otherwise the other answers become the decoys.</p>
-      <p class="status" id="parseStatus"></p>
+
+    <div class="step">
+      <div class="step-head">
+        <span class="label">Step 1 · Ask any AI for questions</span>
+        <label class="count" for="aiCount">How many
+          <select id="aiCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select>
+        </label>
+      </div>
+      <pre class="prompt" id="aiPrompt"></pre>
+      <div class="row">
+        <button class="btn" type="button" id="btnCopy">Copy prompt</button>
+        <span class="copy-note" id="copyNote" aria-live="polite"></span>
+      </div>
     </div>
+
+    <div class="step">
+      <div class="step-head"><label class="label" for="deck">Step 2 · Paste the reply here</label></div>
+      <div class="field">
+        <textarea id="deck" spellcheck="false" placeholder="What gas do plants absorb? | Carbon dioxide | Oxygen | Nitrogen | Helium"></textarea>
+        <p class="help">One question per line: <code>Question | Right answer | Wrong | Wrong | Wrong</code>. Wrong answers are optional; without them the game borrows your other answers. Numbering, bullets and a <code>Topic:</code> line are fine.</p>
+        <p class="status" id="parseStatus"></p>
+      </div>
+    </div>
+
     <div class="opts">
       <div class="field">
-        <span class="label" id="paceLabel">Shelf speed</span>
+        <span class="label" id="paceLabel">Question speed</span>
         <div class="seg" role="radiogroup" aria-labelledby="paceLabel">
           <label><input type="radio" name="pace" id="paceCalm" value="calm"><span>Calm</span></label>
           <label><input type="radio" name="pace" id="paceStandard" value="standard" checked><span>Standard</span></label>
           <label><input type="radio" name="pace" id="paceSwift" value="swift"><span>Swift</span></label>
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="hatches" checked> Sealed hatches: type the answer every 5th shelf</label>
+      <label class="check"><input type="checkbox" id="hatches" checked> Sealed hatches (type the answer now and then)</label>
     </div>
     <div class="row">
       <button class="btn primary" type="submit" id="btnBegin">Begin descent</button>
       <button class="btn" type="button" id="btnSample">Load sample deck</button>
       <button class="btn" type="button" id="btnClear">Clear</button>
     </div>
-    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> steer · <kbd>Space</kbd> surge through · <kbd>1</kbd>–<kbd>4</kbd> pick a passage · <kbd>S</kbd> sonar · <kbd>Esc</kbd> pause · on touch, tap a passage</p>
+    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer (or drag on the water) · <kbd>Space</kbd> surge through a shelf · <kbd>1</kbd>–<kbd>4</kbd> pick an answer · <kbd>S</kbd> sonar · <kbd>Esc</kbd> pause</p>
   </form>
 </div>
 
@@ -257,7 +337,7 @@
   <div class="sheet small">
     <span class="label">Holding position</span>
     <h2>Paused</h2>
-    <p class="help">The shelf stops rising while you hold.</p>
+    <p class="help">Nothing moves while you hold.</p>
     <div class="row">
       <button class="btn primary" type="button" id="btnResume">Resume dive</button>
       <button class="btn" type="button" id="btnAbort">Surface to dive plan</button>
@@ -265,10 +345,23 @@
   </div>
 </div>
 
+<!-- Refit shop -->
+<div class="overlay" id="refit" hidden>
+  <div class="sheet">
+    <div class="stack">
+      <span class="label" id="refitEyebrow">Monster driven off</span>
+      <h2>Refit</h2>
+      <p class="help">A support tender drops a crate. Spend pearls on as many upgrades as you can afford. <b class="val pearls" id="refitPearls">0 pearls</b></p>
+    </div>
+    <div class="shop" id="shop"></div>
+    <div class="row"><button class="btn primary" type="button" id="btnRefitGo">Continue the descent</button></div>
+  </div>
+</div>
+
 <!-- Debrief -->
 <div class="overlay" id="end" hidden>
   <div class="sheet">
-    <div style="display:grid;gap:8px">
+    <div class="stack">
       <span class="label" id="endEyebrow">Touchdown</span>
       <h2 id="endTitle">You reached Challenger Deep</h2>
       <p class="help" id="endSub"></p>
@@ -277,10 +370,12 @@
       <div class="stat"><span class="label">Max depth</span><span class="val" id="sDepth">0 m</span></div>
       <div class="stat"><span class="label">Accuracy</span><span class="val" id="sAcc">0%</span></div>
       <div class="stat"><span class="label">Best streak</span><span class="val" id="sStreak">0</span></div>
+      <div class="stat"><span class="label">Pearls</span><span class="val pearls" id="sPearls">0</span></div>
+      <div class="stat"><span class="label">Monsters</span><span class="val" id="sBoss">0</span></div>
       <div class="stat"><span class="label">Score</span><span class="val" id="sScore">0</span></div>
     </div>
     <p class="record" id="sRecord"></p>
-    <div style="display:grid;gap:8px">
+    <div class="stack">
       <span class="label">Dive log · wrong turns</span>
       <ul class="log" id="log"></ul>
     </div>
@@ -298,28 +393,44 @@
   const $ = (id) => document.getElementById(id);
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const COARSE = matchMedia('(pointer: coarse)').matches;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   const MAX_DEPTH = 10935;
   const ZONES = [[0, 'Sunlight zone'], [200, 'Twilight zone'], [1000, 'Midnight zone'], [4000, 'Abyssal zone'], [6000, 'Hadal zone']];
   const WATER = [[0, [27, 111, 143]], [200, [14, 63, 92]], [1000, [7, 31, 51]], [4000, [4, 15, 28]], [MAX_DEPTH, [1, 5, 11]]];
-  const PACE = { calm: 21, standard: 14, swift: 9 };
+  const PACE = { calm: 20, standard: 13, swift: 8 };
+  const BOSSES = [
+    { name: 'Giant squid', color: '#b8483f', dark: '#6d211c', eye: '#ffe07a' },
+    { name: 'Colossal squid', color: '#9a3f78', dark: '#4f1a3d', eye: '#a8f6ff' },
+    { name: 'The Leviathan', color: '#2f6a7c', dark: '#123440', eye: '#ff6b5b' },
+  ];
+  const CRUISE_LINES = {
+    'Sunlight zone': ['Open water. Scoop up pearls and steer around the rocks.', 'Sunbeams still reach this far. Enjoy them while they last.'],
+    'Twilight zone': ['The light is fading. Lanternfish flicker at the edge of the lamp.', 'Twilight water. Keep an eye out for anglerfish lures.'],
+    'Midnight zone': ['No sunlight reaches here. Trust the lamp.', 'Pitch dark. Anything glowing out there is probably hungry.'],
+    'Abyssal zone': ['Near-freezing water, crushing pressure. Keep moving.', 'The abyssal plain. Rocks loom out of the dark with little warning.'],
+    'Hadal zone': ['Trench walls close in. Challenger Deep is below.', 'Deeper than almost anyone has been. Hold steady.'],
+  };
 
   const SAMPLE_TOPIC = 'The Deep Ocean';
-  const SAMPLE = [
-    'What is the deepest known point in the ocean? | Challenger Deep',
-    'Which trench holds the deepest point on Earth? | Mariana Trench',
-    'Which zone spans roughly 200 to 1,000 metres down? | Twilight zone',
-    'What is light produced by living organisms called? | Bioluminescence',
-    'Which bathyscaphe first reached Challenger Deep, in 1960? | Trieste',
-    'Roughly how deep is Challenger Deep, in metres? | 10,935',
-    'Cracks in the seafloor that spew hot, mineral-rich water? | Hydrothermal vents',
-    'How do vent bacteria make food without sunlight? | Chemosynthesis',
-    'Which fish dangles a glowing lure in front of its mouth? | Anglerfish',
-    'Drifting flakes of organic matter that sink from above? | Marine snow',
-    'What is the zone deeper than 6,000 metres called? | Hadal zone',
-    'Who piloted a solo dive to Challenger Deep in 2012? | James Cameron | Jacques Piccard | Victor Vescovo',
-    'Pressure rises by about how much for every 10 m of seawater? | 1 atmosphere | 10 atmospheres | 0.1 atmosphere',
-  ].join('\n');
+  const SAMPLE = `Topic: The Deep Ocean
+What is the deepest known point in the ocean? | Challenger Deep | Sirena Deep | Horizon Deep | Milwaukee Deep
+Which trench holds the deepest point on Earth? | Mariana Trench | Tonga Trench | Java Trench | Puerto Rico Trench
+Which zone spans roughly 200 to 1,000 metres down? | Twilight zone | Sunlight zone | Midnight zone | Hadal zone
+What is light made by living organisms called? | Bioluminescence | Phosphorescence | Photosynthesis | Refraction
+Which bathyscaphe first reached Challenger Deep, in 1960? | Trieste | Alvin | Nautilus | Deepsea Challenger
+Roughly how deep is Challenger Deep, in metres? | 10,935 | 8,849 | 6,500 | 12,400
+What are seafloor cracks that spew hot, mineral-rich water? | Hydrothermal vents | Cold seeps | Brine pools | Mud volcanoes
+How do vent bacteria make food without sunlight? | Chemosynthesis | Photosynthesis | Fermentation | Osmosis
+Which fish dangles a glowing lure in front of its mouth? | Anglerfish | Viperfish | Gulper eel | Lanternfish
+What are the flakes of organic matter that sink from above called? | Marine snow | Sea foam | Plankton bloom | Silt rain
+What is the zone deeper than 6,000 metres called? | Hadal zone | Abyssal zone | Midnight zone | Benthic zone
+Who made a solo dive to Challenger Deep in 2012? | James Cameron | Jacques Piccard | Victor Vescovo | Sylvia Earle
+Pressure rises by about how much for every 10 m of seawater? | 1 atmosphere | 10 atmospheres | 0.1 atmosphere | 100 atmospheres
+What is the heaviest invertebrate ever recorded? | Colossal squid | Giant squid | Lion's mane jellyfish | Japanese spider crab
+Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 85% | About 62%
+Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfish | Moray eel`;
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('bathy:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -330,20 +441,30 @@
   const SEPS = ['\t', '|', '::', ' = ', ' -> ', ' → ', ' — ', ' – ', ' - '];
   function parseDeck(text) {
     const cards = [], skipped = [];
-    let pendingQ = null;
+    let pendingQ = null, topic = '';
     for (const raw of text.split(/\r?\n/)) {
-      const t = raw.trim();
-      if (!t || t.startsWith('#')) continue;
-      let m = t.match(/^(?:q|question)\s*[:.)]\s*(.+)$/i);
+      let t = raw.replace(/\*\*|__/g, '').trim();
+      if (!t || t.startsWith('```') || t.startsWith('#')) continue;
+      t = t.replace(/^(?:[-*•]\s+|\d{1,3}[.)]\s+)/, '');
+      if (/^question\s*\|\s*correct answer/i.test(t)) continue;
+      let m = t.match(/^topic\s*[:\-]\s*(.+)$/i);
+      if (m) { topic = m[1].trim(); continue; }
+      m = t.match(/^(?:q|question)\s*[:.)]\s*(.+)$/i);
       if (m) { pendingQ = m[1].trim(); continue; }
       m = t.match(/^(?:a|answer)\s*[:.)]\s*(.+)$/i);
-      if (m) { if (pendingQ) cards.push({ q: pendingQ, a: m[1].trim(), decoys: [] }); else skipped.push(t); pendingQ = null; continue; }
-      const sep = SEPS.find((s) => raw.includes(s));
+      if (m) {
+        if (pendingQ) {
+          const [a, ...decoys] = m[1].split('|').map((p) => p.trim()).filter(Boolean);
+          cards.push({ q: pendingQ, a, decoys });
+        } else skipped.push(t);
+        pendingQ = null; continue;
+      }
+      const sep = SEPS.find((s) => t.includes(s));
       if (sep) {
-        const parts = (sep === '\t' ? raw : t).split(sep).map((p) => p.trim()).filter(Boolean);
+        const parts = t.split(sep).map((p) => p.trim()).filter(Boolean);
         if (parts.length >= 2) {
           const [q, a, ...decoys] = sep.startsWith(' ') ? [parts[0], parts.slice(1).join(sep)] : parts;
-          cards.push({ q, a, decoys: decoys || [] });
+          cards.push({ q, a, decoys });
           pendingQ = null;
           continue;
         }
@@ -353,7 +474,7 @@
       skipped.push(t);
     }
     if (pendingQ) skipped.push(pendingQ);
-    return { cards: cards.map((c) => ({ ...c, decoys: c.decoys || [] })), skipped };
+    return { cards, skipped, topic };
   }
 
   function norm(s) {
@@ -366,6 +487,7 @@
     const set = new Set([norm(ans), norm(ans.replace(/\([^)]*\)/g, ''))]);
     (ans.match(/\(([^)]*)\)/g) || []).forEach((p) => set.add(norm(p.slice(1, -1))));
     ans.split(/\s*[\/;]\s*|\s+or\s+/i).forEach((p) => set.add(norm(p)));
+    set.add(norm(ans.replace(/^(about|around|roughly|approximately)\s+/i, '')));
     set.delete('');
     return [...set];
   }
@@ -390,7 +512,7 @@
     });
   }
 
-  /* ================= Building the passages ================= */
+  /* ================= Building answer options ================= */
   const isNum = (s) => /^[-+]?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?\s*%?$/.test(s.trim());
   function kind(s) {
     if (isNum(s)) return 'n';
@@ -450,157 +572,368 @@
     return { options: list.map((o) => o.t), correctIdx: list.findIndex((o) => o.ok) };
   }
 
+  /* ================= Upgrades ================= */
+  const UPGRADES = [
+    { id: 'plating', name: 'Reinforced plating', desc: 'One more hull pip, and a full repair.', cost: 30, max: 2, apply() { S.maxHp += 2; S.hp = S.maxHp; } },
+    { id: 'repair', name: 'Repair crew', desc: 'Patch the hull back to full.', cost: 12, max: 99, ok: () => S.hp < S.maxHp, apply() { S.hp = S.maxHp; } },
+    { id: 'lamp', name: 'Arc lamp', desc: 'Your light reaches much further into the dark.', cost: 20, max: 3, apply() { S.up.lamp++; } },
+    { id: 'thrust', name: 'Vectored thrusters', desc: 'Steer 25% faster.', cost: 18, max: 3, apply() { S.up.thrust++; } },
+    { id: 'magnet', name: 'Pearl magnet', desc: 'Pulls pearls in from further away.', cost: 22, max: 3, apply() { S.up.magnet++; } },
+    { id: 'sonar', name: 'Sonar buoys', desc: 'Two extra sonar pings to knock out wrong answers.', cost: 15, max: 99, apply() { S.sonar += 2; } },
+    { id: 'ballast', name: 'Trim ballast', desc: 'Questions give you 15% more time.', cost: 24, max: 2, apply() { S.up.ballast++; } },
+  ];
+
   /* ================= Game state ================= */
   const S = {
-    mode: 'setup', round: null, deck: [], queue: [], answerPool: [], topic: SAMPLE_TOPIC,
-    pace: 'standard', hatches: true, muted: store.get('muted', false),
-    lane: 0, subX: 0, hull: 3, streak: 0, best: 0, score: 0, sonar: 1,
-    mastered: 0, total: 0, attempts: 0, correct: 0, qNum: 0, missed: new Map(),
-    depthTarget: 0, depthShown: 0, maxDepth: 0, lastCards: [], fullCards: [],
+    mode: 'setup', ev: null, topic: SAMPLE_TOPIC, pace: 'standard', hatches: true, muted: store.get('muted', false),
+    deck: [], queue: [], answerPool: [], lastCards: [], fullCards: [],
+    total: 0, mastered: 0, attempts: 0, correct: 0, qNum: 0, missed: new Map(),
+    hp: 6, maxHp: 6, streak: 0, best: 0, score: 0, pearls: 0, pearlsTotal: 0, sonar: 1,
+    up: { lamp: 0, thrust: 0, magnet: 0, ballast: 0 }, bought: {},
+    bossesAt: [], bossesDone: 0, bossKills: 0, pendingBoss: false,
+    depthTarget: 0, depthShown: 0, maxDepth: 0,
+    x: 0, autoX: null, autoOrb: null, invuln: 0, overdrive: 0, scroll: 30,
   };
-  let time = 0, shake = 0, boost = 0, toastTimer = 0;
+  let time = 0, shake = 0, toastTimer = 0, bannerTimer = 0, flash = 0, pearlChain = 0, pearlChainT = 0;
+  let ents = [], flares = [], snow = [], bubbles = [], bits = [], floaters = [];
+  const keys = new Set();
+  const pointer = { active: false, x: 0 };
 
-  const depthFor = (mastered, total) => MAX_DEPTH * Math.pow(total ? mastered / total : 0, 1.5);
+  const depthFor = (m, t) => MAX_DEPTH * Math.pow(t ? m / t : 0, 1.5);
   const zoneOf = (d) => ZONES.reduce((z, cur) => (d >= cur[0] ? cur[1] : z), ZONES[0][1]);
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  const timeScale = () => 1 + 0.15 * S.up.ballast;
+  const mult = () => (1 + Math.floor(S.streak / 3) * 0.5) * (S.overdrive > 0 ? 2 : 1);
 
   function startGame(cards, pool) {
-    S.fullCards = pool;
-    S.lastCards = cards;
+    S.fullCards = pool; S.lastCards = cards;
     S.deck = cards.map((c, i) => ({ ...c, id: i }));
     S.answerPool = pool.flatMap((c) => [c.a, ...c.decoys]);
     S.queue = shuffle([...S.deck]);
-    Object.assign(S, { total: S.deck.length, mastered: 0, hull: 3, streak: 0, best: 0, score: 0, sonar: 1, attempts: 0, correct: 0, qNum: 0, depthTarget: 0, depthShown: 0, maxDepth: 0 });
+    Object.assign(S, {
+      total: S.deck.length, mastered: 0, attempts: 0, correct: 0, qNum: 0, hp: 6, maxHp: 6, streak: 0, best: 0, score: 0,
+      pearls: 0, pearlsTotal: 0, sonar: 1, up: { lamp: 0, thrust: 0, magnet: 0, ballast: 0 }, bought: {},
+      bossesDone: 0, bossKills: 0, pendingBoss: false, depthTarget: 0, depthShown: 0, maxDepth: 0,
+      x: W / 2, autoX: null, autoOrb: null, invuln: 0, overdrive: 0,
+    });
+    S.bossesAt = S.total >= 10 ? [1000, 4000, 7500] : S.total >= 6 ? [3000] : [];
     S.missed = new Map();
+    ents = []; flares = []; bits = []; floaters = [];
     S.mode = 'play';
     $('expName').textContent = 'Expedition · ' + S.topic;
-    $('setup').hidden = true; $('end').hidden = true; $('pause').hidden = true;
-    renderHud();
-    nextQuestion();
+    ['setup', 'end', 'pause', 'refit', 'banner'].forEach((id) => { $(id).hidden = true; });
+    renderHud(true);
+    startCruise(3.2, 'first');
   }
 
-  function nextQuestion() {
-    $('crash').hidden = true;
-    if (!S.queue.length) { endGame(true); return; }
+  /* ---------- Open water ---------- */
+  function startCruise(len, kindOf) {
+    clearLabels();
+    $('hatchForm').hidden = true; $('crash').hidden = true; $('bossBar').hidden = true;
+    const warn = S.pendingBoss;
+    S.ev = { type: 'cruise', t: 0, len: warn ? len + 1 : len, spawnT: 0.4, warn };
+    S.autoX = null; S.autoOrb = null;
+    const zone = zoneOf(S.depthShown);
+    const line = kindOf === 'first'
+      ? (COARSE ? 'Open water. Drag on the water to steer, grab pearls, dodge rocks.' : 'Open water. Steer with ← → (or drag) to grab pearls and dodge rocks.')
+      : warn ? 'Something enormous is rising on sonar…' : CRUISE_LINES[zone][Math.floor(Math.random() * 2)];
+    setIdle(line, warn);
+    $('rCount').textContent = `${S.mastered}/${S.total} cleared`;
+    if (warn) sfx.warn();
+  }
+  function afterCruise() {
+    if (S.pendingBoss) { S.pendingBoss = false; startBoss(); } else startShelf();
+  }
+  function nextAfterAnswer() {
+    if (!S.queue.length) { touchdown(); return; }
+    startCruise(rand(3.4, 4.8), 'normal');
+  }
+
+  function spawnPattern() {
+    const d = S.depthShown / MAX_DEPTH, y0 = H + 40, r = Math.random();
+    if (r < 0.42) {
+      const n = 5 + Math.floor(Math.random() * 4), cx = rand(50, W - 50), amp = rand(20, 70), ph = rand(0, 6);
+      for (let k = 0; k < n; k++) ents.push({ type: 'pearl', x: clamp(cx + Math.sin(ph + k * 0.7) * amp, 20, W - 20), y: y0 + k * 26, vx: 0 });
+    } else if (r < 0.78) {
+      const cnt = 1 + (Math.random() < 0.3 + d * 0.5 ? 1 : 0);
+      for (let k = 0; k < cnt; k++) ents.push({ type: 'rock', x: rand(20, W - 20), y: y0 + k * 70, r: rand(14, 30), seed: rand(0, 10), vx: rand(-12, 12), rot: 0, spin: rand(-0.6, 0.6) });
+      if (Math.random() < 0.5) {
+        const cx = rand(40, W - 40);
+        for (let k = 0; k < 3; k++) ents.push({ type: 'pearl', x: cx, y: y0 + 120 + k * 26, vx: 0 });
+      }
+    } else if (S.depthShown > 400) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      ents.push({ type: 'angler', x: dir > 0 ? -40 : W + 40, y: rand(H * 0.45, H * 0.9), vx: dir * rand(45, 70 + d * 60), dir, ph: rand(0, 6) });
+    } else {
+      ents.push({ type: 'rock', x: rand(20, W - 20), y: y0, r: rand(16, 26), seed: rand(0, 10), vx: 0, rot: 0, spin: rand(-0.6, 0.6) });
+    }
+    if (S.hp < S.maxHp && Math.random() < 0.07) ents.push({ type: 'kit', x: rand(40, W - 40), y: y0 + 60, vx: 0 });
+  }
+
+  /* ---------- Rock shelves ---------- */
+  function startShelf() {
+    if (!S.queue.length) { touchdown(); return; }
     const card = S.queue.shift();
     S.qNum++;
-    let hatch = S.hatches && S.qNum % 5 === 0 && norm(card.a).length <= 28;
+    let hatch = S.hatches && S.qNum % 7 === 0 && norm(card.a).length <= 28;
     let options = [card.a], correctIdx = 0;
     if (!hatch) {
       ({ options, correctIdx } = buildOptions(card));
       if (options.length < 2) { hatch = true; options = [card.a]; correctIdx = 0; }
     }
     const n = options.length;
-    const T = PACE[S.pace] + Math.min(8, card.q.length * 0.035) + (hatch ? PACE[S.pace] * 0.6 : 0) + (n > 1 ? options.join('').length * 0.02 : 0);
-    S.round = { card, options, correctIdx, n, hatch, T, t: 0, sp: 0, phase: 'approach', closed: new Set(), passT: 0, recoil: 0, hatchOpen: 0, opening: false, chosen: -1, seed: Math.random() * 100, earned: true };
-    S.lane = hatch ? 0 : Math.min(Math.max(S.lane, 0), n - 1);
-    renderReadout();
-    renderGaps();
-    renderHud();
+    const T = (PACE[S.pace] + Math.min(8, card.q.length * 0.035) + (hatch ? PACE[S.pace] * 0.6 : options.join('').length * 0.02)) * timeScale();
+    S.ev = { type: 'shelf', card, options, correctIdx, n, hatch, T, t: 0, sp: 0, phase: 'approach', closed: new Set(), passT: 0, recoil: 0, hatchOpen: 0, opening: false, chosen: -1, seed: rand(0, 100), crashT: 0 };
+    S.autoX = null;
+    setQuestion(card.q, `Shelf ${S.qNum} · ${S.mastered}/${S.total} cleared`);
+    $('hatchForm').hidden = !hatch;
+    if (hatch) {
+      makeLabels([{ text: 'Sealed hatch', cls: 'hatch' }]);
+      $('hatchInput').value = '';
+      setTimeout(() => $('hatchInput').focus({ preventScroll: true }), 30);
+    } else {
+      makeLabels(options.map((o, i) => ({ text: o, key: i + 1, onClick: () => chooseLane(i) })));
+    }
     sfx.ping();
-    if (hatch) { $('hatchInput').value = ''; setTimeout(() => $('hatchInput').focus({ preventScroll: true }), 30); }
   }
-
-  function steer(dir) {
-    const r = S.round;
-    if (S.mode !== 'play' || !r || r.phase !== 'approach' || r.hatch) return;
-    let i = S.lane + dir;
-    while (i >= 0 && i < r.n && r.closed.has(i)) i += dir;
-    if (i >= 0 && i < r.n) { S.lane = i; updateGapClasses(); sfx.tick(); }
+  function laneUnderSub(ev) {
+    let i = clamp(Math.floor(S.x / (W / ev.n)), 0, ev.n - 1);
+    if (ev.closed.has(i)) {
+      const open = [...Array(ev.n).keys()].filter((k) => !ev.closed.has(k));
+      i = open.reduce((b, k) => (Math.abs(k - i) < Math.abs(b - i) ? k : b), open[0]);
+    }
+    return i;
   }
-
-  function commit(i) {
-    const r = S.round;
-    if (S.mode !== 'play' || !r || r.phase !== 'approach' || r.hatch) return;
-    if (i < 0 || i >= r.n || r.closed.has(i)) return;
-    S.lane = i; r.chosen = i;
-    r.sp = Math.min(1, r.t / r.T); r.phase = 'surge';
-    updateGapClasses();
+  function chooseLane(i) {
+    const ev = S.ev;
+    if (S.mode !== 'play' || !ev || ev.type !== 'shelf' || ev.phase !== 'approach' || ev.hatch) return;
+    if (i < 0 || i >= ev.n || ev.closed.has(i)) return;
+    ev.chosen = i; S.autoX = laneX(i, ev.n);
+    ev.sp = Math.min(1, ev.t / ev.T); ev.phase = 'surge';
+    updateTagClasses();
   }
-
   function submitHatch() {
-    const r = S.round;
-    if (S.mode !== 'play' || !r || !r.hatch || r.phase !== 'approach') return;
-    r.typed = $('hatchInput').value;
-    r.sp = Math.min(1, r.t / r.T); r.phase = 'surge';
+    const ev = S.ev;
+    if (S.mode !== 'play' || !ev || ev.type !== 'shelf' || !ev.hatch || ev.phase !== 'approach') return;
+    ev.typed = $('hatchInput').value;
+    S.autoX = W / 2;
+    ev.sp = Math.min(1, ev.t / ev.T); ev.phase = 'surge';
     $('hatchInput').blur();
   }
-
-  function impact() {
-    const r = S.round;
-    const right = r.hatch ? matches(r.typed || '', r.card.a) : r.chosen === r.correctIdx;
-    S.attempts++;
+  function impactShelf() {
+    const ev = S.ev;
+    const right = ev.hatch ? matches(ev.typed || '', ev.card.a) : ev.chosen === ev.correctIdx;
     if (right) {
-      const mult = 1 + Math.floor(S.streak / 3) * 0.5;
-      const speed = Math.round(60 * Math.max(0, 1 - r.t / r.T));
-      const pts = Math.round((100 + speed + (r.hatch ? 50 : 0)) * mult);
-      S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++;
-      S.depthTarget = depthFor(S.mastered, S.total); S.maxDepth = S.depthTarget;
-      let msg = `+${pts}` + (mult > 1 ? ` · ×${mult}` : '');
-      if (S.streak % 5 === 0 && S.hull < 3) { S.hull++; msg = 'Hull patched · ' + msg; }
-      if (S.streak % 4 === 0 && S.sonar < 3) { S.sonar++; msg += ' · +1 sonar'; }
-      toast(msg);
-      if (r.hatch) r.opening = true;
-      r.phase = 'pass'; r.passT = 0;
-      sfx.right();
+      scoreRight(ev, 100 + Math.round(60 * Math.max(0, 1 - ev.t / ev.T)) + (ev.hatch ? 50 : 0));
+      if (ev.hatch) ev.opening = true;
+      ev.phase = 'pass'; ev.passT = 0;
       burstBubbles();
     } else {
-      S.streak = 0; S.hull--;
-      S.missed.set(r.card.id, (S.missed.get(r.card.id) || 0) + 1);
-      S.queue.splice(Math.min(S.queue.length, 2 + Math.floor(Math.random() * 2)), 0, r.card);
-      shake = RM ? 0 : 14;
-      sparks();
-      sfx.crash();
-      r.phase = S.hull <= 0 ? 'breached' : 'crashed';
-      showCrash(r);
+      scoreWrong(ev.card, 2);
+      ev.phase = S.hp <= 0 ? 'breached' : 'crashed';
+      ev.crashT = 0;
+      showCrash(ev);
     }
-    updateGapClasses();
-    renderHud();
+    updateTagClasses();
+  }
+  function continueDive() {
+    const ev = S.ev;
+    if (!ev || ev.type !== 'shelf') return;
+    if (ev.phase === 'breached') { endGame(false); return; }
+    if (ev.phase !== 'crashed') return;
+    $('crash').hidden = true;
+    ev.phase = 'recover';
+    S.autoX = ev.hatch ? W / 2 : laneX(ev.correctIdx, ev.n);
+    if (ev.hatch) ev.opening = true;
   }
 
-  function continueDive() {
-    const r = S.round;
-    if (!r) return;
-    if (r.phase === 'breached') { endGame(false); return; }
-    if (r.phase !== 'crashed') return;
-    $('crash').hidden = true;
-    r.phase = 'recover'; r.earned = false;
-    S.lane = r.correctIdx;
-    if (r.hatch) r.opening = true;
+  /* ---------- Sea monsters ---------- */
+  function startBoss() {
+    const def = BOSSES[Math.min(S.bossesDone, BOSSES.length - 1)];
+    S.bossesDone++;
+    const hp = Math.min(3 + (S.bossesDone >= 3 ? 1 : 0), S.queue.length);
+    if (hp < 2) { startShelf(); return; }
+    S.ev = { type: 'boss', def, hp, maxHp: hp, x: W / 2, rise: 340, state: 'enter', t: 0, v: null, hit: 0, lash: 0, inkT: 2.5, gap: 0 };
+    clearLabels();
+    $('bossName').textContent = def.name;
+    $('bossFill').style.transform = 'scaleX(1)';
+    $('bossBar').hidden = false;
+    setIdle(`A ${def.name.replace(/^The /, '').toLowerCase()} rises from the dark. Swim into the right answer to fire a flare. ${hp} hits will drive it off.`, true);
+    $('rCount').textContent = `${hp} flares to land`;
+    sfx.roar();
+    shake = RM ? 0 : 10;
+  }
+  function startVolley() {
+    const ev = S.ev;
+    if (!S.queue.length) { ev.state = 'dying'; ev.t = 0; return; }
+    const card = S.queue.shift();
+    S.qNum++;
+    const { options, correctIdx } = buildOptions(card);
+    const n = options.length;
+    const T = (PACE[S.pace] * 0.95 + Math.min(8, card.q.length * 0.035) + options.join('').length * 0.02) * timeScale();
+    ev.v = { card, options, correctIdx, n, T, t: 0, closed: new Set(), done: false, picked: -1, orbs: options.map((_, i) => ({ i, ph: rand(0, 6), x: laneX(i, n), y: H + 40 })) };
+    ev.state = 'volley';
+    S.autoX = null; S.autoOrb = null;
+    setQuestion(card.q, `${ev.def.name} · ${ev.hp} ${ev.hp === 1 ? 'hit' : 'hits'} left`);
+    makeLabels(options.map((o, i) => ({ text: o, key: i + 1, cls: 'orb', onClick: () => { if (ev.v && !ev.v.done && !ev.v.closed.has(i)) S.autoOrb = i; } })));
+    sfx.ping();
+  }
+  function hitOrb(i) {
+    const ev = S.ev, v = ev.v;
+    if (!v || v.done) return;
+    v.done = true; v.picked = i; S.autoOrb = null;
+    updateTagClasses();
+    if (i === v.correctIdx) {
+      scoreRight(ev, 150);
+      flares.push({ x0: S.x, y0: subY(), t: 0 });
+      sfx.flare();
+      ev.state = 'between'; ev.gap = 1.1;
+    } else {
+      scoreWrong(v.card, 2);
+      ev.lash = 1;
+      showBanner(i < 0 ? 'Missed every answer' : 'Lashed by a tentacle', v.card.a);
+      if (S.hp <= 0) { breach(); return; }
+      ev.state = 'between'; ev.gap = 2.6;
+    }
+    setTimeout(() => { if (S.ev === ev) clearLabels(); }, 700);
+  }
+  function flareHit() {
+    const ev = S.ev;
+    if (!ev || ev.type !== 'boss') return;
+    ev.hp--; ev.hit = 1;
+    $('bossFill').style.transform = `scaleX(${ev.hp / ev.maxHp})`;
+    const hx = ev.x, hy = bossY(ev);
+    for (let k = 0; k < (RM ? 0 : 40); k++) { const a = rand(0, Math.PI * 2), sp = rand(60, 260); bits.push({ x: hx, y: hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: rand(0.5, 1), c: '255,190,90' }); }
+    shake = RM ? 0 : 8;
+    sfx.boom();
+    if (ev.hp <= 0) { ev.state = 'dying'; ev.t = 0; toast('Monster driven off · +15 pearls', true); }
+  }
+  function finishBoss() {
+    S.bossKills++; S.pearls += 15; S.pearlsTotal += 15; S.score += 500;
+    if (S.queue.length) openRefit(); else touchdown();
+  }
+
+  /* ---------- Refit ---------- */
+  function openRefit() {
+    S.mode = 'refit';
+    keys.clear(); pointer.active = false;
+    clearLabels();
+    $('bossBar').hidden = true;
+    const avail = UPGRADES.filter((u) => (S.bought[u.id] || 0) < u.max && (!u.ok || u.ok()));
+    const offer = shuffle(avail).slice(0, 3);
+    const shop = $('shop');
+    shop.replaceChildren();
+    const sync = () => {
+      $('refitPearls').textContent = `${S.pearls} pearls`;
+      [...shop.children].forEach((b) => { if (!b.classList.contains('bought')) b.disabled = S.pearls < +b.dataset.cost; });
+    };
+    for (const u of offer) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'card'; b.dataset.cost = u.cost;
+      const name = document.createElement('span'); name.className = 'name'; name.textContent = u.name;
+      const desc = document.createElement('span'); desc.className = 'desc'; desc.textContent = u.desc;
+      const cost = document.createElement('span'); cost.className = 'cost'; cost.textContent = `${u.cost} pearls`;
+      b.append(name, desc, cost);
+      b.addEventListener('click', () => {
+        if (S.pearls < u.cost || b.classList.contains('bought')) return;
+        S.pearls -= u.cost; S.bought[u.id] = (S.bought[u.id] || 0) + 1; u.apply();
+        b.classList.add('bought'); b.disabled = true; cost.textContent = 'Installed';
+        sfx.buy(); sync(); renderHud(true);
+      });
+      shop.append(b);
+    }
+    $('refitEyebrow').textContent = `${S.ev.def.name} driven off`;
+    sync();
+    $('refit').hidden = false;
+    $('btnRefitGo').focus();
+  }
+
+  /* ---------- Scoring ---------- */
+  function scoreRight(ev, base) {
+    const pts = Math.round(base * mult());
+    S.attempts++; S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++;
+    S.pearls += 3; S.pearlsTotal += 3;
+    S.depthTarget = depthFor(S.mastered, S.total); S.maxDepth = S.depthTarget;
+    let msg = `+${pts}`;
+    const od = S.streak % 5 === 0;
+    if (od) { S.overdrive = 8; msg = 'Overdrive! Smash rocks, double points'; sfx.overdrive(); }
+    else if (S.streak >= 3) msg += ` · streak ×${1 + Math.floor(S.streak / 3) * 0.5}`;
+    if (S.streak % 4 === 0 && S.sonar < 5) { S.sonar++; msg += ' · +1 sonar'; }
+    toast(msg, od);
+    floater(S.x, subY() - 34, `+${pts}`, '255,181,71');
+    if (S.bossesDone < S.bossesAt.length && S.depthTarget >= S.bossesAt[S.bossesDone] && S.queue.length >= 2 && ev.type !== 'boss') S.pendingBoss = true;
+    sfx.right();
+    renderHud(true);
+  }
+  function scoreWrong(card, dmg) {
+    S.attempts++; S.streak = 0; S.overdrive = 0;
+    S.hp = Math.max(0, S.hp - dmg);
+    S.missed.set(card.id, (S.missed.get(card.id) || 0) + 1);
+    S.queue.splice(Math.min(S.queue.length, 2 + Math.floor(Math.random() * 2)), 0, card);
+    shake = RM ? 0 : 14; flash = 0.5;
+    sparks(S.x, subY() + 20);
+    sfx.crash();
+    hullHit();
+    renderHud(true);
+  }
+  function hurt(dmg) {
+    if (S.invuln > 0 || S.overdrive > 0) return;
+    S.hp = Math.max(0, S.hp - dmg); S.invuln = 1.4;
+    shake = RM ? 0 : 9; flash = 0.35;
+    sparks(S.x, subY());
+    sfx.bump(); hullHit();
+    renderHud(true);
+    if (S.hp <= 0) breach();
+  }
+  function breach() {
+    clearLabels();
+    $('crash').hidden = true; $('hatchForm').hidden = true;
+    S.ev = { type: 'sunk', t: 0, boss: S.ev && S.ev.type === 'boss' ? S.ev : null };
+    setIdle('Hull breached. The sea floods in…', true);
+    for (let k = 0; k < 30; k++) bubbles.push({ x: S.x + rand(-30, 30), y: subY() + rand(-10, 20), r: rand(2, 6), vy: rand(80, 200), vx: rand(-30, 30), life: 2 });
+  }
+  function touchdown() {
+    clearLabels();
+    $('bossBar').hidden = true;
+    S.ev = { type: 'floor', t: 0 };
+    S.depthTarget = MAX_DEPTH;
+    setIdle('Touchdown. The floor of Challenger Deep, 10,935 m.');
+    toast('Touchdown at Challenger Deep', true);
+    sfx.win();
   }
 
   function useSonar() {
-    const r = S.round;
-    if (S.mode !== 'play' || !r || r.phase !== 'approach' || r.hatch || S.sonar < 1 || r.n < 3 || r.closed.size) return;
-    const wrong = shuffle([...Array(r.n).keys()].filter((i) => i !== r.correctIdx));
-    wrong.slice(0, r.n - 2).forEach((i) => r.closed.add(i));
+    const ev = S.ev;
+    if (S.mode !== 'play' || !ev || S.sonar < 1) return;
+    let target = null;
+    if (ev.type === 'shelf' && ev.phase === 'approach' && !ev.hatch) target = ev;
+    if (ev.type === 'boss' && ev.state === 'volley' && ev.v && !ev.v.done) target = ev.v;
+    if (!target || target.n < 3 || target.closed.size) return;
+    const wrong = shuffle([...Array(target.n).keys()].filter((i) => i !== target.correctIdx));
+    wrong.slice(0, target.n - 2).forEach((i) => target.closed.add(i));
+    if (S.autoOrb != null && target.closed.has(S.autoOrb)) S.autoOrb = null;
     S.sonar--;
-    if (r.closed.has(S.lane)) {
-      const open = [...Array(r.n).keys()].filter((i) => !r.closed.has(i));
-      S.lane = open.reduce((b, i) => (Math.abs(i - S.lane) < Math.abs(b - S.lane) ? i : b), open[0]);
-    }
     sfx.sonar();
-    updateGapClasses();
-    renderHud();
+    updateTagClasses();
+    renderHud(true);
   }
 
   function endGame(won) {
     S.mode = 'end';
-    const r = S.round;
-    if (r) r.phase = 'done';
-    $('gaps').replaceChildren();
-    $('crash').hidden = true;
-    $('hatchForm').hidden = true;
-    const depth = S.maxDepth;
+    clearLabels();
+    ['crash', 'hatchForm', 'bossBar', 'banner'].forEach((id) => { $(id).hidden = true; });
+    const depth = won ? MAX_DEPTH : S.maxDepth;
     $('endEyebrow').textContent = won ? 'Touchdown' : 'Hull breached';
     $('endTitle').textContent = won ? 'You reached Challenger Deep' : `Lost at ${fmt(depth)} m`;
     const wrongTurns = S.attempts - S.correct;
     $('endSub').textContent = won
-      ? `All ${S.total} questions on “${S.topic}” cleared, with ${wrongTurns} wrong ${wrongTurns === 1 ? 'turn' : 'turns'} on the way down.`
+      ? `All ${S.total} questions on “${S.topic}” cleared, with ${wrongTurns} wrong ${wrongTurns === 1 ? 'answer' : 'answers'} on the way down.`
       : `${S.mastered} of ${S.total} questions cleared before the hull gave out in the ${zoneOf(depth).toLowerCase()}.`;
     $('sDepth').textContent = fmt(depth) + ' m';
     $('sAcc').textContent = (S.attempts ? Math.round((S.correct / S.attempts) * 100) : 0) + '%';
     $('sStreak').textContent = S.best;
+    $('sPearls').textContent = S.pearlsTotal;
+    $('sBoss').textContent = S.bossKills;
     $('sScore').textContent = fmt(S.score);
 
     const key = 'best:' + norm(S.topic);
@@ -614,8 +947,8 @@
     log.replaceChildren();
     const missed = [...S.missed.entries()].sort((a, b) => b[1] - a[1]);
     if (!missed.length) {
-      const li = document.createElement('li'); li.className = 'clean'; li.style.borderLeftColor = 'var(--lume)';
-      li.textContent = 'Clean dive. No wrong turns.';
+      const li = document.createElement('li'); li.className = 'clean';
+      li.textContent = 'Clean dive. No wrong answers.';
       log.append(li);
     }
     for (const [id, count] of missed) {
@@ -628,96 +961,113 @@
     }
     $('btnDrill').hidden = !missed.length;
     $('end').hidden = false;
-    won ? sfx.win() : null;
+    renderHud(true);
   }
 
-  /* ================= DOM rendering ================= */
-  function renderReadout() {
-    const r = S.round;
-    $('rQuestion').textContent = r.card.q;
-    $('rCount').textContent = `Shelf ${S.qNum} · ${S.mastered}/${S.total} cleared`;
-    $('hatchForm').hidden = !r.hatch;
+  /* ================= DOM helpers ================= */
+  function setQuestion(text, count) {
+    const q = $('rQuestion');
+    q.textContent = text; q.className = 'question';
+    $('rCount').textContent = count;
   }
-  function renderGaps() {
-    const box = $('gaps'), r = S.round;
+  function setIdle(text, alarm) {
+    const q = $('rQuestion');
+    q.textContent = text; q.className = 'question idle' + (alarm ? ' alarm' : '');
+    $('clockFill').style.transform = 'scaleX(0)';
+  }
+  function clearLabels() { $('labels').replaceChildren(); }
+  function makeLabels(list) {
+    const box = $('labels');
     box.replaceChildren();
-    if (r.hatch) {
-      const d = document.createElement('div');
-      d.className = 'gap hatch'; d.textContent = 'Sealed hatch';
-      box.append(d);
-      return;
+    for (const it of list) {
+      const el = document.createElement(it.onClick ? 'button' : 'div');
+      if (it.onClick) { el.type = 'button'; el.addEventListener('click', (e) => { e.stopPropagation(); it.onClick(); }); }
+      el.className = 'tag' + (it.cls ? ' ' + it.cls : '');
+      if (it.key) { const k = document.createElement('span'); k.className = 'k'; k.textContent = it.key; el.append(k); }
+      const t = document.createElement('span'); t.textContent = it.text; el.append(t);
+      box.append(el);
     }
-    r.options.forEach((opt, i) => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'gap';
-      const k = document.createElement('span'); k.className = 'k'; k.textContent = i < 9 ? String(i + 1) : '';
-      const t = document.createElement('span'); t.textContent = opt;
-      b.append(k, t);
-      b.addEventListener('click', (e) => { e.stopPropagation(); commit(i); });
-      box.append(b);
-    });
-    updateGapClasses();
+    updateTagClasses();
   }
-  function updateGapClasses() {
-    const r = S.round;
-    if (!r || r.hatch) return;
-    const resolved = ['pass', 'crashed', 'breached', 'recover'].includes(r.phase);
-    [...$('gaps').children].forEach((el, i) => {
-      el.classList.toggle('aim', i === S.lane && !resolved);
-      el.classList.toggle('sealed', r.closed.has(i));
-      el.classList.toggle('right', resolved && i === r.correctIdx);
-      el.classList.toggle('wrong', resolved && i === r.chosen && i !== r.correctIdx);
-    });
-  }
-  function layoutGaps(y, alpha) {
-    const r = S.round, kids = $('gaps').children;
-    if (!r || !kids.length) return;
-    if (r.hatch) {
-      const el = kids[0], w = Math.min(W * 0.5, 130);
-      el.style.left = (W / 2 - w / 2) + 'px'; el.style.width = w + 'px';
-      el.style.top = y + 'px'; el.style.opacity = alpha;
-      return;
-    }
-    const lw = W / r.n, w = Math.min(lw - 8, Math.min(lw * 0.74, 150) + 28);
-    for (let i = 0; i < kids.length; i++) {
-      const el = kids[i];
-      el.style.left = (laneX(i, r.n) - w / 2) + 'px';
-      el.style.width = w + 'px';
-      el.style.top = y + 'px';
-      el.style.opacity = alpha;
+  function updateTagClasses() {
+    const ev = S.ev, kids = [...$('labels').children];
+    if (!ev) return;
+    if (ev.type === 'shelf' && !ev.hatch) {
+      const resolved = ['pass', 'crashed', 'breached', 'recover'].includes(ev.phase);
+      const aim = ev.phase === 'surge' ? ev.chosen : laneUnderSub(ev);
+      kids.forEach((el, i) => {
+        el.classList.toggle('aim', i === aim && !resolved);
+        el.classList.toggle('sealed', ev.closed.has(i));
+        el.classList.toggle('right', resolved && i === ev.correctIdx);
+        el.classList.toggle('wrong', resolved && i === ev.chosen && i !== ev.correctIdx);
+      });
+    } else if (ev.type === 'boss' && ev.v) {
+      const v = ev.v;
+      kids.forEach((el, i) => {
+        el.classList.toggle('aim', !v.done && S.autoOrb === i);
+        el.classList.toggle('sealed', v.closed.has(i));
+        el.classList.toggle('right', v.done && i === v.correctIdx);
+        el.classList.toggle('wrong', v.done && i === v.picked && i !== v.correctIdx);
+      });
     }
   }
-  let hudCache = '';
-  function renderHud() {
+  function place(el, x, y, w, alpha) {
+    el.style.width = w + 'px';
+    el.style.transform = `translate(${x - w / 2}px, ${y}px) translateY(-50%)`;
+    el.style.opacity = alpha;
+  }
+  let hudKey = '';
+  function renderHud(force) {
     const d = S.depthShown;
-    const key = [Math.round(d), S.hull, S.streak, S.score, S.sonar, S.mode].join('|');
-    if (key === hudCache) return;
-    hudCache = key;
+    const key = [Math.round(d), S.hp, S.maxHp, S.streak, S.score, S.sonar, S.pearls, S.mode, S.overdrive > 0].join('|');
+    if (!force && key === hudKey) return;
+    hudKey = key;
     $('gDepth').textContent = fmt(d) + ' m';
     $('gPress').textContent = fmt(1 + d / 10.06) + ' atm';
-    [...$('gHull').children].forEach((el, i) => el.classList.toggle('off', i >= S.hull));
-    $('gStreak').textContent = S.streak >= 3 ? `${S.streak} · ×${1 + Math.floor(S.streak / 3) * 0.5}` : S.streak;
+    const hull = $('gHull'), pips = S.maxHp / 2;
+    while (hull.children.length < pips) hull.append(document.createElement('i'));
+    while (hull.children.length > pips) hull.lastChild.remove();
+    [...hull.children].forEach((el, i) => {
+      el.classList.toggle('off', S.hp <= i * 2);
+      el.classList.toggle('half', S.hp === i * 2 + 1);
+    });
+    $('gStreak').textContent = S.overdrive > 0 ? `${S.streak} · OD` : S.streak >= 3 ? `${S.streak} · ×${1 + Math.floor(S.streak / 3) * 0.5}` : S.streak;
+    $('gStreak').style.color = S.overdrive > 0 ? 'var(--lume)' : '';
     $('gScore').textContent = fmt(S.score);
+    $('gPearls').textContent = S.pearls;
     $('sonarCount').textContent = S.sonar;
     $('btnSonar').disabled = S.mode !== 'play' || S.sonar < 1;
     $('btnPause').disabled = S.mode !== 'play' && S.mode !== 'paused';
     $('rZone').textContent = zoneOf(d);
   }
-  function showCrash(r) {
-    const breached = r.phase === 'breached';
-    $('crashTitle').textContent = breached ? 'Hull breached' : `Impact · hull ${S.hull} of 3`;
-    $('crashAns').textContent = r.card.a;
+  function hullHit() {
+    const h = $('gHull');
+    h.classList.remove('hit'); void h.offsetWidth; h.classList.add('hit');
+  }
+  function showCrash(ev) {
+    const breached = ev.phase === 'breached';
+    $('crashTitle').textContent = breached ? 'Hull breached' : `Impact · hull ${Math.ceil(S.hp / 2)} of ${S.maxHp / 2}`;
+    $('crashAns').textContent = ev.card.a;
     $('crashNote').textContent = breached ? 'The dive is over. Your log is waiting.' : 'This question will come around again before you reach the bottom.';
     $('btnContinue').textContent = breached ? 'Read the dive log' : 'Continue';
     $('crash').hidden = false;
-    $('btnContinue').focus({ preventScroll: true });
   }
-  function toast(msg) {
+  function showBanner(title, ans) {
+    $('bannerTitle').textContent = title;
+    $('bannerAns').textContent = ans;
+    $('banner').hidden = false;
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => { $('banner').hidden = true; }, 2600);
+  }
+  function toast(msg, hot) {
     const t = $('toast');
     t.textContent = msg; t.hidden = false;
+    t.classList.toggle('hot', !!hot);
+    t.classList.toggle('low', !$('bossBar').hidden);
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { t.hidden = true; }, 1600);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
   }
+  function floater(x, y, text, rgbStr) { floaters.push({ x, y, text, rgb: rgbStr, t: 0 }); }
 
   /* ================= Sound ================= */
   let AC = null;
@@ -737,27 +1087,35 @@
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.05);
   }
-  function thud() {
+  function noise(dur, freq, gain) {
     const ac = audio(); if (!ac) return;
-    const len = ac.sampleRate * 0.5, buf = ac.createBuffer(1, len, ac.sampleRate), data = buf.getChannelData(0);
+    const len = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, len, ac.sampleRate), data = buf.getChannelData(0);
     for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
     const src = ac.createBufferSource(), lp = ac.createBiquadFilter(), g = ac.createGain();
-    lp.type = 'lowpass'; lp.frequency.value = 380; g.gain.value = 0.5;
+    lp.type = 'lowpass'; lp.frequency.value = freq; g.gain.value = gain;
     src.buffer = buf; src.connect(lp).connect(g).connect(ac.destination); src.start();
   }
   const sfx = {
     ping() { tone(1250, 0.45, { gain: 0.04, to: 1180 }); tone(1250, 0.5, { gain: 0.015, to: 1180, delay: 0.38 }); },
-    tick() { tone(520, 0.05, { type: 'triangle', gain: 0.025 }); },
     right() { tone(523, 0.16, { type: 'triangle', gain: 0.06 }); tone(784, 0.32, { type: 'triangle', gain: 0.06, delay: 0.09 }); },
-    crash() { thud(); tone(140, 0.4, { type: 'sawtooth', gain: 0.04, to: 60 }); },
+    crash() { noise(0.5, 380, 0.5); tone(140, 0.4, { type: 'sawtooth', gain: 0.04, to: 60 }); },
+    bump() { noise(0.3, 600, 0.35); },
+    pearl(n) { tone(880 * Math.pow(1.06, Math.min(n, 14)), 0.12, { gain: 0.035 }); },
+    kit() { tone(440, 0.1, { type: 'square', gain: 0.03 }); tone(660, 0.18, { type: 'square', gain: 0.03, delay: 0.08 }); },
     sonar() { tone(900, 0.9, { gain: 0.05, to: 1500 }); },
+    warn() { tone(220, 0.6, { type: 'sawtooth', gain: 0.03 }); tone(220, 0.6, { type: 'sawtooth', gain: 0.03, delay: 0.8 }); },
+    roar() { tone(70, 1.4, { type: 'sawtooth', gain: 0.07, to: 45 }); noise(1.2, 200, 0.3); },
+    flare() { tone(300, 0.4, { type: 'sawtooth', gain: 0.03, to: 1200 }); },
+    boom() { noise(0.7, 900, 0.5); tone(90, 0.5, { gain: 0.08, to: 40 }); },
+    smash() { noise(0.25, 1400, 0.25); },
+    overdrive() { [392, 523, 659, 784].forEach((f, i) => tone(f, 0.2, { type: 'square', gain: 0.025, delay: i * 0.06 })); },
+    buy() { tone(660, 0.1, { type: 'triangle', gain: 0.05 }); tone(990, 0.2, { type: 'triangle', gain: 0.05, delay: 0.07 }); },
     win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.5, { type: 'triangle', gain: 0.05, delay: i * 0.12 })); },
   };
 
   /* ================= Canvas: the sea ================= */
   const cv = $('sea'), ctx = cv.getContext('2d');
   let W = 1, H = 1, DPR = 1;
-  let snow = [], bubbles = [], sparksArr = [], jellies = [], fish = [];
   function resize() {
     const r = $('stage').getBoundingClientRect();
     DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -766,22 +1124,24 @@
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const count = Math.min(140, Math.round((W * H) / (RM ? 18000 : 8000)));
     snow = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.5 + Math.random() * 1.6, v: 0.4 + Math.random() }));
-    if (!S.subX) S.subX = W / 2;
+    S.x = clamp(S.x || W / 2, 18, W - 18);
   }
   new ResizeObserver(resize).observe($('stage'));
 
-  const subY = () => Math.max(64, H * 0.22);
+  const subY = () => Math.max(64, H * 0.24);
+  const subScale = () => clamp(W / 4 / 140, 0.6, 1);
   const band = () => Math.max(38, Math.min(56, H * 0.1));
   const impactY = () => subY() + 22 + band() / 2;
   const laneX = (i, n) => (i + 0.5) * (W / n);
-  function wallY(r) {
+  const bossY = (ev) => H * 0.8 + Math.sin(time * 1.1) * 8 + ev.rise;
+  function wallY(ev) {
     const start = H - Math.max(56, Math.min(110, H * 0.2));
     const end = impactY();
-    switch (r.phase) {
-      case 'approach': return start + (end - start) * Math.min(1, r.t / r.T);
-      case 'surge': return start + (end - start) * r.sp;
-      case 'pass': return end - r.passT * H * 1.25;
-      default: return end + r.recoil;
+    switch (ev.phase) {
+      case 'approach': return start + (end - start) * Math.min(1, ev.t / ev.T);
+      case 'surge': return start + (end - start) * ev.sp;
+      case 'pass': return end - ev.passT * H * 1.25;
+      default: return end + ev.recoil;
     }
   }
   function waterAt(d) {
@@ -794,47 +1154,248 @@
   const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
   const jag = (x, s) => Math.sin(x * 0.045 + s) * 4 + Math.sin(x * 0.12 + s * 1.7) * 2.5;
 
-  function rockSeg(xa, xb, y, b, seed, fill) {
-    if (xb - xa < 1) return;
-    ctx.beginPath();
-    ctx.moveTo(xa, y - b / 2 + jag(xa, seed));
-    for (let x = xa; x < xb; x += 10) ctx.lineTo(x, y - b / 2 + jag(x, seed));
-    ctx.lineTo(xb, y - b / 2 + jag(xb, seed));
-    ctx.lineTo(xb + jag(y, seed) * 0.4, y);
-    ctx.lineTo(xb, y + b / 2 + jag(xb, seed + 7));
-    for (let x = xb; x > xa; x -= 10) ctx.lineTo(x, y + b / 2 + jag(x, seed + 7));
-    ctx.lineTo(xa, y + b / 2 + jag(xa, seed + 7));
-    ctx.lineTo(xa - jag(y, seed + 3) * 0.4, y);
-    ctx.closePath();
-    ctx.fillStyle = fill; ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+  function burstBubbles() {
+    if (RM) return;
+    for (let i = 0; i < 26; i++) bubbles.push({ x: S.x + rand(-20, 20), y: subY() + rand(-10, 10), r: rand(1.5, 5), vy: rand(60, 180), vx: rand(-15, 15), life: 1.4 });
+  }
+  function sparks(x, y) {
+    if (RM) return;
+    for (let i = 0; i < 28; i++) { const a = rand(-Math.PI, 0), sp = rand(60, 280); bits.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, life: rand(0.6, 1.1), c: '255,170,80', g: 1 }); }
   }
 
-  function drawWall(r, y) {
+  /* ---------- Update ---------- */
+  function update(dt) {
+    time += dt;
+    const ev = S.ev;
+    const playing = S.mode === 'play' && ev;
+    const d = S.depthShown / MAX_DEPTH;
+    let scrollTarget = 30;
+
+    if (playing) {
+      S.invuln = Math.max(0, S.invuln - dt);
+      S.overdrive = Math.max(0, S.overdrive - dt);
+      if (ev.type === 'cruise') {
+        ev.t += dt; ev.spawnT -= dt;
+        scrollTarget = 115 + d * 90 + (S.overdrive > 0 ? 50 : 0);
+        if (ev.spawnT <= 0 && ev.t < ev.len - 1.3) { spawnPattern(); ev.spawnT = Math.max(0.5, 0.95 - d * 0.35); }
+        if (ev.t >= ev.len) afterCruise();
+      } else if (ev.type === 'shelf') {
+        scrollTarget = ev.phase === 'pass' ? 520 : ev.phase === 'crashed' || ev.phase === 'breached' ? 0 : 40;
+        if (ev.phase === 'approach') {
+          ev.t += dt;
+          if (ev.t >= ev.T) { if (ev.hatch) submitHatch(); else chooseLane(laneUnderSub(ev)); }
+          $('clockFill').style.transform = `scaleX(${Math.max(0, 1 - ev.t / ev.T)})`;
+          updateTagClasses();
+        } else if (ev.phase === 'surge') {
+          ev.sp = Math.min(1, ev.sp + dt * 3.4);
+          if (ev.sp >= 1) impactShelf();
+        } else if (ev.phase === 'pass') {
+          ev.passT += dt;
+          if (ev.passT >= 0.9) nextAfterAnswer();
+        } else if (ev.phase === 'crashed' || ev.phase === 'breached') {
+          ev.recoil += (34 - ev.recoil) * Math.min(1, dt * 8);
+          ev.crashT += dt;
+          const lim = ev.phase === 'crashed' ? 3.6 : 3;
+          $('crashTimer').style.transform = `scaleX(${Math.max(0, 1 - ev.crashT / lim)})`;
+          if (ev.crashT >= lim) continueDive();
+        } else if (ev.phase === 'recover') {
+          const tx = ev.hatch ? W / 2 : laneX(ev.correctIdx, ev.n);
+          ev.recoil += (0 - ev.recoil) * Math.min(1, dt * 5);
+          if (Math.abs(S.x - tx) < 4 && ev.recoil < 2 && (!ev.hatch || ev.hatchOpen > 0.95)) { ev.phase = 'pass'; ev.passT = 0; burstBubbles(); }
+        }
+        if (ev.opening) ev.hatchOpen = Math.min(1, ev.hatchOpen + dt * 5);
+      } else if (ev.type === 'boss') {
+        scrollTarget = 35;
+        ev.x = W / 2 + Math.sin(time * 0.5) * W * 0.22;
+        ev.hit = Math.max(0, ev.hit - dt * 3);
+        ev.lash = Math.max(0, ev.lash - dt * 1.6);
+        if (ev.state === 'enter') { ev.rise = Math.max(0, ev.rise - dt * 240); if (ev.rise <= 0) startVolley(); }
+        else if (ev.state === 'volley') {
+          const v = ev.v;
+          v.t += dt;
+          $('clockFill').style.transform = `scaleX(${Math.max(0, 1 - v.t / v.T)})`;
+          const startY = H + 30, endY = subY() - 70, lw = W / v.n, sy = subY();
+          for (const o of v.orbs) {
+            o.y = startY + (endY - startY) * Math.min(1, v.t / v.T);
+            o.x = laneX(o.i, v.n) + Math.sin(time * 0.9 + o.ph) * lw * 0.2;
+          }
+          if (S.autoOrb != null) S.autoX = v.orbs[S.autoOrb].x;
+          for (const o of v.orbs) {
+            if (!v.done && !v.closed.has(o.i) && Math.abs(o.x - S.x) < Math.min(60, lw * 0.4) && Math.abs(o.y - sy) < 26) hitOrb(o.i);
+          }
+          if (!v.done && v.t >= v.T) hitOrb(-1);
+          if (S.ev === ev && ev.state === 'volley') {
+            ev.inkT -= dt;
+            if (ev.inkT <= 0) {
+              const tx = clamp(S.x + rand(-60, 60), 20, W - 20);
+              ents.push({ type: 'ink', x: ev.x, y: bossY(ev) - 40, vx: (tx - ev.x) / 2.2, r: 11 });
+              ev.inkT = rand(2.2, 3.6) - d;
+            }
+            updateTagClasses();
+          }
+        } else if (ev.state === 'between') {
+          ev.gap -= dt;
+          if (ev.gap <= 0) { if (ev.hp <= 0) { ev.state = 'dying'; ev.t = 0; } else startVolley(); }
+        } else if (ev.state === 'dying') {
+          ev.t += dt; ev.rise += dt * 180;
+          if (ev.t >= 2.2) finishBoss();
+        }
+      } else if (ev.type === 'sunk') {
+        ev.t += dt; scrollTarget = 0;
+        if (ev.t >= 2.2) endGame(false);
+      } else if (ev.type === 'floor') {
+        ev.t += dt; scrollTarget = Math.max(0, 60 - ev.t * 40);
+        if (ev.t >= 2.6) endGame(true);
+      }
+    }
+    S.scroll += (scrollTarget - S.scroll) * Math.min(1, dt * 3);
+
+    // steering
+    const cur = S.ev;
+    const live = S.mode === 'play' && cur;
+    const forced = live && cur.type === 'shelf' && ['surge', 'pass', 'recover'].includes(cur.phase);
+    const frozen = live && ((cur.type === 'shelf' && (cur.phase === 'crashed' || cur.phase === 'breached')) || cur.type === 'sunk');
+    const maxV = 360 * (1 + 0.25 * S.up.thrust);
+    const steerKeys = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+    if (!forced && (steerKeys || pointer.active)) { S.autoX = null; S.autoOrb = null; }
+    const tgt = forced ? S.autoX : pointer.active ? pointer.x : S.autoX;
+    let vx;
+    if (!live) vx = (W / 2 - S.x) * 2;
+    else if (frozen) vx = 0;
+    else if (tgt != null) vx = clamp((tgt - S.x) * 9, -maxV * 1.4, maxV * 1.4);
+    else vx = steerKeys * maxV;
+    const edge = 38 * subScale();
+    S.x = clamp(S.x + vx * dt, edge, W - edge);
+
+    S.depthShown += (S.depthTarget - S.depthShown) * Math.min(1, dt * 2.2);
+    shake = Math.max(0, shake - dt * 40);
+    flash = Math.max(0, flash - dt * 1.5);
+    pearlChainT -= dt; if (pearlChainT <= 0) pearlChain = 0;
+
+    // entities
+    const sy = subY(), sr = 24 * subScale();
+    const magR = S.overdrive > 0 ? 260 : 50 + S.up.magnet * 70;
+    const collide = live && S.ev.type !== 'sunk' && S.ev.type !== 'floor';
+    for (const e of ents) {
+      e.y -= S.scroll * dt; e.x += e.vx * dt;
+      if (e.type === 'rock') e.rot += e.spin * dt;
+      if (e.type === 'ink') e.y -= 90 * dt;
+      if (e.type === 'jelly' || !collide) continue;
+      const dx = S.x - e.x, dy = sy - e.y, dist = Math.hypot(dx, dy) || 1;
+      if (e.type === 'pearl' || e.type === 'kit') {
+        if (dist < magR) { e.x += (dx / dist) * 420 * dt; e.y += (dy / dist) * 420 * dt; }
+        if (dist < sr + 10) {
+          e.dead = true;
+          if (e.type === 'pearl') {
+            pearlChain++; pearlChainT = 1.2;
+            const gain = S.overdrive > 0 ? 2 : 1;
+            S.pearls += gain; S.pearlsTotal += gain; S.score += 10 * gain;
+            sfx.pearl(pearlChain);
+            if (pearlChain >= 5 && pearlChain % 5 === 0) floater(S.x, sy - 30, `${pearlChain} pearl chain`, '255,233,242');
+          } else {
+            S.hp = Math.min(S.maxHp, S.hp + 2); sfx.kit(); floater(S.x, sy - 30, 'Hull repaired', '111,227,207');
+          }
+        }
+      } else {
+        const r = e.type === 'angler' ? 16 : e.r;
+        if (dist < r + sr * 0.8) {
+          if (S.overdrive > 0 && e.type !== 'ink') {
+            e.dead = true; S.score += 25; sfx.smash();
+            for (let k = 0; k < 14; k++) bits.push({ x: e.x, y: e.y, vx: rand(-160, 160), vy: rand(-160, 60), life: rand(0.4, 0.8), c: '150,170,180', g: 1 });
+            floater(e.x, e.y - 20, '+25', '111,227,207');
+          } else if (S.invuln <= 0 && S.overdrive <= 0) {
+            if (e.type === 'ink') e.dead = true;
+            hurt(1);
+            if (S.ev.type === 'sunk') break;
+          }
+        }
+      }
+    }
+    ents = ents.filter((e) => !e.dead && e.y > -80 && e.x > -140 && e.x < W + 140);
+
+    for (const f of flares) {
+      f.t += dt / 0.5;
+      if (f.t >= 1 && !f.done) { f.done = true; flareHit(); }
+    }
+    flares = flares.filter((f) => !f.done);
+
+    for (const p of snow) {
+      p.y -= (8 + S.scroll) * p.v * dt; p.x += Math.sin(time * 0.6 + p.y * 0.02) * 4 * dt;
+      if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W; }
+    }
+    for (const b of bubbles) { b.y -= b.vy * dt; b.x += b.vx * dt; b.life -= dt; }
+    bubbles = bubbles.filter((b) => b.life > 0 && b.y > -10);
+    for (const s of bits) { s.x += s.vx * dt; s.y += s.vy * dt; if (s.g) s.vy += 260 * dt; s.life -= dt; }
+    bits = bits.filter((s) => s.life > 0);
+    for (const f of floaters) { f.t += dt; f.y -= 30 * dt; }
+    floaters = floaters.filter((f) => f.t < 1.1);
+
+    if (!RM && S.depthShown > 300 && ents.filter((e) => e.type === 'jelly').length < 2 && Math.random() < dt * 0.2) {
+      ents.push({ type: 'jelly', x: rand(40, W - 40), y: H + 40, vx: 0, s: rand(8, 18), ph: rand(0, 6), hue: Math.random() < 0.3 ? '255,140,200' : '111,227,207' });
+    }
+  }
+
+  /* ---------- Draw ---------- */
+  function drawRock(e) {
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
+    const g = ctx.createRadialGradient(-e.r * 0.3, -e.r * 0.4, 1, 0, 0, e.r * 1.1);
+    g.addColorStop(0, '#5d6f77'); g.addColorStop(1, '#1b262d');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * Math.PI * 2, rr = e.r * (0.78 + 0.22 * Math.sin(e.seed * 3 + k * 2.3));
+      if (k) ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); else ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+  }
+  function drawAngler(e) {
+    ctx.save(); ctx.translate(e.x, e.y); ctx.scale(e.dir, 1);
+    ctx.fillStyle = '#20303a';
+    ctx.beginPath(); ctx.ellipse(0, 0, 22, 15, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-32, -10); ctx.lineTo(-32, 10); ctx.fill();
+    ctx.fillStyle = '#0a1116'; ctx.beginPath(); ctx.moveTo(22, 2); ctx.lineTo(8, 4); ctx.lineTo(20, 12); ctx.fill();
+    ctx.fillStyle = '#e8eef0';
+    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(10 + k * 3, 4); ctx.lineTo(11.5 + k * 3, 8); ctx.lineTo(13 + k * 3, 4); ctx.fill(); }
+    ctx.strokeStyle = '#3c4d57'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(8, -12); ctx.quadraticCurveTo(20, -30, 30, -18); ctx.stroke();
+    ctx.restore();
+  }
+  function drawWall(ev, y) {
     const b = band();
     const g = ctx.createLinearGradient(0, y - b / 2, 0, y + b / 2);
     g.addColorStop(0, '#4a5c64'); g.addColorStop(0.35, '#2c3b43'); g.addColorStop(1, '#141e24');
-    const gaps = r.hatch
+    const gaps = ev.hatch
       ? [{ c: W / 2, w: Math.min(W * 0.5, 130), i: 0 }]
-      : r.options.map((_, i) => ({ c: laneX(i, r.n), w: Math.min((W / r.n) * 0.74, 150), i }));
+      : ev.options.map((_, i) => ({ c: laneX(i, ev.n), w: Math.min((W / ev.n) * 0.74, 150), i }));
+    const seg = (xa, xb) => {
+      if (xb - xa < 1) return;
+      ctx.beginPath();
+      ctx.moveTo(xa, y - b / 2 + jag(xa, ev.seed));
+      for (let x = xa; x < xb; x += 10) ctx.lineTo(x, y - b / 2 + jag(x, ev.seed));
+      ctx.lineTo(xb, y - b / 2 + jag(xb, ev.seed));
+      ctx.lineTo(xb, y + b / 2 + jag(xb, ev.seed + 7));
+      for (let x = xb; x > xa; x -= 10) ctx.lineTo(x, y + b / 2 + jag(x, ev.seed + 7));
+      ctx.lineTo(xa, y + b / 2 + jag(xa, ev.seed + 7));
+      ctx.closePath();
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+    };
     let x0 = -12;
     for (const gp of gaps) {
-      if (!r.hatch && r.closed.has(gp.i)) continue;
-      rockSeg(x0, gp.c - gp.w / 2, y, b, r.seed, g);
+      if (!ev.hatch && ev.closed.has(gp.i)) continue;
+      seg(x0, gp.c - gp.w / 2);
       x0 = gp.c + gp.w / 2;
     }
-    rockSeg(x0, W + 12, y, b, r.seed, g);
-
-    // sonar-sealed passages: rubble plugs
-    if (!r.hatch) for (const gp of gaps) {
-      if (!r.closed.has(gp.i)) continue;
+    seg(x0, W + 12);
+    if (!ev.hatch) for (const gp of gaps) {
+      if (!ev.closed.has(gp.i)) continue;
       ctx.fillStyle = 'rgba(0,0,0,.25)';
-      for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(gp.c - gp.w / 3 + (k * gp.w) / 6, y + Math.sin(k * 3 + r.seed) * b * 0.25, 4 + (k % 3) * 2, 0, Math.PI * 2); ctx.fill(); }
+      for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(gp.c - gp.w / 3 + (k * gp.w) / 6, y + Math.sin(k * 3 + ev.seed) * b * 0.25, 4 + (k % 3) * 2, 0, Math.PI * 2); ctx.fill(); }
     }
-
-    // sealed hatch doors
-    if (r.hatch) {
-      const gp = gaps[0], half = (gp.w / 2) * (1 - r.hatchOpen);
+    if (ev.hatch) {
+      const gp = gaps[0], half = (gp.w / 2) * (1 - ev.hatchOpen);
       if (half > 0.5) {
         [[gp.c - gp.w / 2, half], [gp.c + gp.w / 2 - half, half]].forEach(([x, w]) => {
           ctx.fillStyle = '#6b7a80'; ctx.fillRect(x, y - b / 2 + 3, w, b - 6);
@@ -846,108 +1407,91 @@
         });
       }
     }
-
-    // after a result, glow in the true passage
-    if (['pass', 'crashed', 'breached', 'recover'].includes(r.phase)) {
-      const gp = gaps[r.correctIdx] || gaps[0];
+    if (['pass', 'crashed', 'breached', 'recover'].includes(ev.phase)) {
+      const gp = gaps[ev.correctIdx] || gaps[0];
       const gg = ctx.createRadialGradient(gp.c, y, 2, gp.c, y, gp.w * 0.8);
       gg.addColorStop(0, 'rgba(111,227,207,.35)'); gg.addColorStop(1, 'rgba(111,227,207,0)');
       ctx.fillStyle = gg; ctx.fillRect(gp.c - gp.w, y - b, gp.w * 2, b * 2);
     }
   }
+  const bossScale = () => clamp(W / 700 + 0.45, 0.8, 1.3);
+  function drawBoss(ev) {
+    const bx = ev.x, by = bossY(ev), sc = bossScale(), def = ev.def;
+    ctx.save(); ctx.translate(bx, by); ctx.scale(sc, sc);
+    const body = ev.hit > 0 ? '#ffe2c4' : def.color;
+    ctx.lineCap = 'round';
+    for (let k = 0; k < 8; k++) {                                                  // arms reaching up toward the sub
+      const side = k - 3.5, len = 120 + (k % 3) * 26;
+      let px = side * 7, py = -8;
+      for (let s = 1; s <= 12; s++) {
+        const t = s / 12;
+        const nx = side * 7 + side * 16 * t + Math.sin(time * 2 + k + t * 5) * 16 * t;
+        const ny = -8 - len * t;
+        ctx.strokeStyle = body; ctx.lineWidth = 11 * (1 - t) + 2;
+        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke();
+        px = nx; py = ny;
+      }
+    }
+    const mg = ctx.createLinearGradient(0, -20, 0, 180);
+    mg.addColorStop(0, body); mg.addColorStop(1, def.dark);
+    ctx.fillStyle = mg;
+    ctx.beginPath(); ctx.ellipse(0, 70, 48, 92, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-46, 130); ctx.quadraticCurveTo(-90, 160, -40, 175); ctx.lineTo(0, 150); ctx.lineTo(40, 175); ctx.quadraticCurveTo(90, 160, 46, 130); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    for (let k = 0; k < 7; k++) { ctx.beginPath(); ctx.arc(Math.sin(k * 2.7) * 28, 30 + k * 16, 4 + (k % 3), 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
 
+    if (ev.lash > 0) {
+      const k = ev.lash > 0.7 ? (1 - ev.lash) / 0.3 : ev.lash / 0.7;
+      const tx = bx + (S.x - bx) * k, ty = by + (subY() + 10 - by) * k;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = def.color; ctx.lineWidth = 12;
+      ctx.beginPath(); ctx.moveTo(bx, by - 10); ctx.quadraticCurveTo(bx + 120 * Math.sign(S.x - bx || 1), (by + ty) / 2, tx, ty); ctx.stroke();
+      ctx.strokeStyle = def.dark; ctx.lineWidth = 4; ctx.stroke();
+    }
+  }
+  function drawBossEyes(ev) {
+    const bx = ev.x, by = bossY(ev), sc = bossScale();
+    for (const s of [-1, 1]) {
+      const ex = bx + s * 24 * sc, ey = by + 12 * sc;
+      const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 26 * sc);
+      g.addColorStop(0, ev.def.eye); g.addColorStop(0.35, ev.def.eye + '88'); g.addColorStop(1, ev.def.eye + '00');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 26 * sc, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#05080b'; ctx.beginPath(); ctx.ellipse(ex + clamp((S.x - ex) * 0.01, -3, 3), ey - 1, 3 * sc, 7 * sc, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   function drawSub(x, y, s) {
     ctx.save();
     ctx.translate(x, y); ctx.scale(s, s);
-    ctx.fillStyle = '#6d7f86'; ctx.fillRect(-3, 8, 6, 6);                   // gondola strut
-    ctx.fillStyle = '#d99a36';                                                 // float
+    ctx.fillStyle = '#6d7f86'; ctx.fillRect(-3, 8, 6, 6);
+    ctx.fillStyle = '#d99a36';
     ctx.beginPath(); ctx.roundRect(-36, -14, 72, 24, 12); ctx.fill();
     ctx.fillStyle = '#b27a22'; ctx.fillRect(-34, 1, 68, 4);
     ctx.fillStyle = '#c98b2c'; ctx.beginPath(); ctx.roundRect(-9, -22, 18, 10, 3); ctx.fill();
-    const blade = Math.abs(Math.sin(time * 18)) * 8 + 1;                       // propeller
+    const blade = Math.abs(Math.sin(time * 18)) * 8 + 1;
     ctx.fillStyle = '#8a969b'; ctx.beginPath(); ctx.ellipse(-40, -2, 2.5, blade, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#9fb3ba'; ctx.beginPath(); ctx.arc(0, 21, 11, 0, Math.PI * 2); ctx.fill(); // observation sphere
+    ctx.fillStyle = '#9fb3ba'; ctx.beginPath(); ctx.arc(0, 21, 11, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#5d6f76'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(4, 22, 3.6, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
-
-  function burstBubbles() {
-    if (RM) return;
-    for (let i = 0; i < 26; i++) bubbles.push({ x: S.subX + (Math.random() - 0.5) * 40, y: subY() + (Math.random() - 0.5) * 20, r: 1.5 + Math.random() * 3.5, vy: 60 + Math.random() * 120, vx: (Math.random() - 0.5) * 30, life: 1.4 });
-  }
-  function sparks() {
-    if (RM) return;
-    for (let i = 0; i < 32; i++) {
-      const a = Math.random() * Math.PI - Math.PI, sp = 60 + Math.random() * 220;
-      sparksArr.push({ x: S.subX + (Math.random() - 0.5) * 30, y: subY() + 24, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, life: 0.7 + Math.random() * 0.4 });
-    }
-  }
-
-  function update(dt) {
-    time += dt;
-    const r = S.round;
-    const playing = S.mode === 'play' && r;
-    if (playing) {
-      if (r.phase === 'approach') {
-        r.t += dt;
-        if (r.t >= r.T) { if (r.hatch) submitHatch(); else commit(S.lane); }
-        $('clockFill').style.transform = `scaleX(${Math.max(0, 1 - r.t / r.T)})`;
-      } else if (r.phase === 'surge') {
-        r.sp = Math.min(1, r.sp + dt * 3.4);
-        if (r.sp >= 1) impact();
-      } else if (r.phase === 'pass') {
-        r.passT += dt;
-        if (r.passT >= 0.95) nextQuestion();
-      } else if (r.phase === 'crashed' || r.phase === 'breached') {
-        r.recoil += (34 - r.recoil) * Math.min(1, dt * 8);
-      } else if (r.phase === 'recover') {
-        const tx = r.hatch ? W / 2 : laneX(r.correctIdx, r.n);
-        r.recoil += (0 - r.recoil) * Math.min(1, dt * 5);
-        if (Math.abs(S.subX - tx) < 3 && r.recoil < 2 && (!r.hatch || r.hatchOpen > 0.95)) { r.phase = 'pass'; r.passT = 0; burstBubbles(); }
-      }
-      if (r.opening) r.hatchOpen = Math.min(1, r.hatchOpen + dt * 5);
-    }
-    const n = r && S.mode !== 'setup' ? r.n : 1;
-    const tx = n === 1 ? W / 2 : laneX(S.lane, n);
-    S.subX += (tx - S.subX) * Math.min(1, dt * 9);
-    S.depthShown += (S.depthTarget - S.depthShown) * Math.min(1, dt * 2.2);
-    shake = Math.max(0, shake - dt * 40);
-    const passing = playing && r.phase === 'pass';
-    boost += ((passing ? 9 : 1) - boost) * Math.min(1, dt * 4);
-
-    const rise = 14 * boost;
-    for (const p of snow) {
-      p.y -= rise * p.v * dt; p.x += Math.sin(time * 0.6 + p.y * 0.02) * 4 * dt;
-      if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W; }
-    }
-    for (const b of bubbles) { b.y -= b.vy * dt; b.x += b.vx * dt; b.life -= dt; }
-    bubbles = bubbles.filter((b) => b.life > 0 && b.y > -10);
-    for (const s of sparksArr) { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 260 * dt; s.life -= dt; }
-    sparksArr = sparksArr.filter((s) => s.life > 0);
-
-    const d = S.depthShown;
-    if (!RM && d > 300 && jellies.length < 3 && Math.random() < dt * 0.25) jellies.push({ x: 40 + Math.random() * (W - 80), y: H + 40, s: 8 + Math.random() * 12, ph: Math.random() * 6, hue: Math.random() < 0.3 ? 'pink' : 'lume' });
-    for (const j of jellies) { j.y -= (6 + rise * 0.5) * dt; j.x += Math.sin(time * 0.4 + j.ph) * 6 * dt; }
-    jellies = jellies.filter((j) => j.y > -60);
-    if (!RM && d < 400 && fish.length < 2 && Math.random() < dt * 0.3) {
-      const dir = Math.random() < 0.5 ? 1 : -1;
-      fish.push({ x: dir > 0 ? -60 : W + 60, y: H * (0.35 + Math.random() * 0.5), dir, n: 4 + Math.floor(Math.random() * 5), v: 30 + Math.random() * 30 });
-    }
-    for (const f of fish) { f.x += f.dir * f.v * dt; f.y -= rise * 0.3 * dt; }
-    fish = fish.filter((f) => f.x > -120 && f.x < W + 120);
+  function glow(x, y, r, col, a) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
 
   function draw() {
-    const d = S.depthShown, r = S.round;
+    const d = S.depthShown, ev = S.ev;
+    const inPlay = ev && (S.mode === 'play' || S.mode === 'paused' || S.mode === 'refit');
     const water = waterAt(d), deeper = waterAt(Math.min(MAX_DEPTH, d + 900));
     ctx.save();
-    if (shake) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    if (shake) ctx.translate(rand(-0.5, 0.5) * shake, rand(-0.5, 0.5) * shake);
     const bg = ctx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, rgb(water)); bg.addColorStop(1, rgb(deeper));
     ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
 
-    const shallow = Math.max(0, 1 - d / 350);                                   // sunbeams near the surface
+    const shallow = Math.max(0, 1 - d / 350);
     if (shallow > 0) {
       ctx.globalCompositeOperation = 'lighter';
       for (let i = 0; i < 5; i++) {
@@ -959,31 +1503,34 @@
       ctx.globalCompositeOperation = 'source-over';
     }
 
-    for (const f of fish) {                                                      // shoals, shallow water only
-      ctx.fillStyle = 'rgba(4,22,34,.55)';
-      for (let k = 0; k < f.n; k++) {
-        const fx = f.x - f.dir * k * 14 + Math.sin(k * 2.1) * 6, fy = f.y + Math.sin(k * 1.7 + time * 3) * 8 + (k % 2) * 10;
-        ctx.beginPath(); ctx.ellipse(fx, fy, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(fx - f.dir * 6, fy); ctx.lineTo(fx - f.dir * 11, fy - 3.5); ctx.lineTo(fx - f.dir * 11, fy + 3.5); ctx.fill();
-      }
-    }
-
-    ctx.fillStyle = 'rgba(225,238,242,.55)';                                     // marine snow
+    ctx.fillStyle = 'rgba(225,238,242,.55)';
     for (const p of snow) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
 
-    const inPlay = r && (S.mode === 'play' || S.mode === 'paused');
-    const y = inPlay ? wallY(r) : 0;
-    if (inPlay && r.phase !== 'done') drawWall(r, y);
+    if (inPlay && ev.type === 'floor') {
+      const fy = H - Math.min(1, ev.t / 1.6) * H * 0.3;
+      ctx.fillStyle = '#10181d';
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 16) ctx.lineTo(x, fy + Math.sin(x * 0.02) * 10 + Math.sin(x * 0.07) * 4);
+      ctx.lineTo(W, H); ctx.fill();
+    }
 
-    const n = inPlay ? r.n : 1;
-    const s = Math.max(0.58, Math.min(1, (W / n) / 140));
-    const sy = subY() + Math.sin(time * 1.8) * 3 - (inPlay && (r.phase === 'crashed' || r.phase === 'breached') ? r.recoil * 0.2 : 0);
-    drawSub(S.subX, sy, s);
+    const boss = inPlay ? (ev.type === 'boss' ? ev : ev.type === 'sunk' ? ev.boss : null) : null;
+    if (boss) drawBoss(boss);
+    for (const e of ents) { if (e.type === 'rock') drawRock(e); else if (e.type === 'angler') drawAngler(e); }
 
-    // darkness closes in with depth; the lamp (and a hot streak) push it back
-    const dark = Math.min(0.9, 0.05 + (d / 1300) * 0.85);
-    const lampR = Math.min(W, H) * 0.42 * (1 + Math.min(S.streak, 10) * 0.07) + 60;
-    const lx = S.subX, ly = sy + 60;
+    let wy = 0;
+    if (inPlay && ev.type === 'shelf') { wy = wallY(ev); drawWall(ev, wy); }
+
+    const s = subScale();
+    const sunk = inPlay && ev.type === 'sunk';
+    const sy = subY() + Math.sin(time * 1.8) * 3 + (sunk ? ev.t * ev.t * 30 : 0) - (inPlay && ev.type === 'shelf' && (ev.phase === 'crashed' || ev.phase === 'breached') ? ev.recoil * 0.2 : 0);
+    const blink = S.invuln > 0 && Math.floor(time * 12) % 2 === 0;
+    if (!blink) drawSub(S.x, sy, s);
+
+    // darkness closes in with depth; the lamp, upgrades and a hot streak push it back
+    const dark = Math.min(0.88, 0.05 + (d / 1300) * 0.83);
+    const lampR = (Math.min(W, H) * 0.42 * (1 + Math.min(S.streak, 10) * 0.05) + 60) * (1 + 0.3 * S.up.lamp) * (S.overdrive > 0 ? 1.3 : 1);
+    const lx = S.x, ly = sy + 70;
     const dg = ctx.createRadialGradient(lx, ly, lampR * 0.2, lx, ly, lampR);
     dg.addColorStop(0, 'rgba(1,4,9,0)'); dg.addColorStop(1, `rgba(1,4,9,${dark})`);
     ctx.fillStyle = dg; ctx.fillRect(-20, -20, W + 40, H + 40);
@@ -994,37 +1541,88 @@
     ctx.fillStyle = beam;
     ctx.beginPath(); ctx.moveTo(lx - 10 * s, sy + 22 * s); ctx.lineTo(lx + 10 * s, sy + 22 * s); ctx.lineTo(lx + lampR * 0.45, sy + 20 + lampR); ctx.lineTo(lx - lampR * 0.45, sy + 20 + lampR); ctx.fill();
 
-    for (const j of jellies) {                                                   // bioluminescent jellies glow in the dark
-      const col = j.hue === 'pink' ? '255,140,200' : '111,227,207';
-      const a = Math.min(1, dark + 0.2) * 0.8;
-      const gl = ctx.createRadialGradient(j.x, j.y, 0, j.x, j.y, j.s * 3);
-      gl.addColorStop(0, `rgba(${col},${0.35 * a})`); gl.addColorStop(1, `rgba(${col},0)`);
-      ctx.fillStyle = gl; ctx.fillRect(j.x - j.s * 3, j.y - j.s * 3, j.s * 6, j.s * 6);
-      const pulse = 1 + Math.sin(time * 2 + j.ph) * 0.12;
-      ctx.fillStyle = `rgba(${col},${0.5 * a})`;
-      ctx.beginPath(); ctx.ellipse(j.x, j.y, j.s * pulse, j.s * 0.7, 0, Math.PI, 0); ctx.fill();
-      ctx.strokeStyle = `rgba(${col},${0.35 * a})`; ctx.lineWidth = 1;
-      for (let k = -2; k <= 2; k++) {
-        ctx.beginPath(); ctx.moveTo(j.x + k * j.s * 0.35, j.y);
-        for (let t = 0; t <= 1; t += 0.2) ctx.lineTo(j.x + k * j.s * 0.35 + Math.sin(time * 2 + t * 5 + k) * 3, j.y + t * j.s * 2.4);
-        ctx.stroke();
+    for (const e of ents) {
+      if (e.type === 'pearl') { glow(e.x, e.y, 14, '255,220,235', 0.55); ctx.fillStyle = '#fff4f8'; ctx.beginPath(); ctx.arc(e.x, e.y, 4, 0, Math.PI * 2); ctx.fill(); }
+      else if (e.type === 'kit') {
+        glow(e.x, e.y, 26, '111,227,207', 0.5);
+        ctx.fillStyle = '#6fe3cf'; ctx.fillRect(e.x - 9, e.y - 3, 18, 6); ctx.fillRect(e.x - 3, e.y - 9, 6, 18);
+      } else if (e.type === 'angler') {
+        const lxp = e.x + e.dir * 30, lyp = e.y - 18 + Math.sin(time * 3 + e.ph) * 2;
+        glow(lxp, lyp, 30, '180,255,200', 0.6);
+        ctx.fillStyle = '#eaffef'; ctx.beginPath(); ctx.arc(lxp, lyp, 3, 0, Math.PI * 2); ctx.fill();
+      } else if (e.type === 'ink') {
+        glow(e.x, e.y, e.r * 2.6, '190,90,255', 0.45);
+        ctx.fillStyle = 'rgba(40,10,60,.9)'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+      } else if (e.type === 'jelly') {
+        const a = Math.min(1, dark + 0.2) * 0.8;
+        glow(e.x, e.y, e.s * 3, e.hue, 0.35 * a);
+        const pulse = 1 + Math.sin(time * 2 + e.ph) * 0.12;
+        ctx.fillStyle = `rgba(${e.hue},${0.5 * a})`;
+        ctx.beginPath(); ctx.ellipse(e.x, e.y, e.s * pulse, e.s * 0.7, 0, Math.PI, 0); ctx.fill();
+        ctx.strokeStyle = `rgba(${e.hue},${0.35 * a})`; ctx.lineWidth = 1;
+        for (let k = -2; k <= 2; k++) {
+          ctx.beginPath(); ctx.moveTo(e.x + k * e.s * 0.35, e.y);
+          for (let t = 0; t <= 1; t += 0.2) ctx.lineTo(e.x + k * e.s * 0.35 + Math.sin(time * 2 + t * 5 + k) * 3, e.y + t * e.s * 2.4);
+          ctx.stroke();
+        }
       }
     }
-    ctx.fillStyle = 'rgba(255,210,122,.5)';                                      // porthole glow
-    ctx.beginPath(); ctx.arc(S.subX + 4 * s, sy + 22 * s, 7 * s, 0, Math.PI * 2); ctx.fill();
-    for (const s2 of sparksArr) { ctx.fillStyle = `rgba(255,170,80,${Math.min(1, s2.life * 1.5)})`; ctx.fillRect(s2.x, s2.y, 2.5, 2.5); }
+    if (boss) drawBossEyes(boss);
+    if (inPlay && ev.type === 'boss' && ev.v && !ev.v.done) for (const o of ev.v.orbs) if (!ev.v.closed.has(o.i)) glow(o.x, o.y, 60, '111,227,207', 0.18);
+    if (inPlay && ev.type === 'boss') for (const f of flares) {
+      const tx = ev.x, ty = bossY(ev);
+      const fx = f.x0 + (tx - f.x0) * f.t, fy = f.y0 + (ty - f.y0) * f.t - Math.sin(f.t * Math.PI) * 40;
+      glow(fx, fy, 34, '255,190,90', 0.9);
+      ctx.fillStyle = '#fff3d6'; ctx.beginPath(); ctx.arc(fx, fy, 4, 0, Math.PI * 2); ctx.fill();
+      if (!RM) bits.push({ x: fx, y: fy, vx: rand(-20, 20), vy: rand(-20, 20), life: 0.35, c: '255,170,80' });
+    }
+    glow(S.x + 4 * s, sy + 22 * s, 9 * s, '255,210,122', 0.8);
+    if (S.overdrive > 0) {
+      const pr = 44 * s + Math.sin(time * 10) * 3;
+      ctx.strokeStyle = `rgba(111,227,207,${0.4 + 0.3 * Math.sin(time * 8)})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(S.x, sy + 4, pr, 0, Math.PI * 2); ctx.stroke();
+      glow(S.x, sy, 70 * s, '111,227,207', 0.18);
+    }
+    for (const b2 of bits) { ctx.fillStyle = `rgba(${b2.c},${Math.min(1, b2.life * 1.6)})`; ctx.fillRect(b2.x, b2.y, 2.5, 2.5); }
     ctx.globalCompositeOperation = 'source-over';
 
-    ctx.strokeStyle = 'rgba(210,235,242,.6)'; ctx.lineWidth = 1;                // bubbles from a clean pass
+    ctx.strokeStyle = 'rgba(210,235,242,.6)'; ctx.lineWidth = 1;
     for (const b of bubbles) { ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
+
+    ctx.font = '700 13px "JetBrains Mono", ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    for (const f of floaters) { ctx.fillStyle = `rgba(${f.rgb},${1 - f.t / 1.1})`; ctx.fillText(f.text, f.x, f.y); }
+    ctx.textAlign = 'left';
+
+    if (inPlay && ev.type === 'cruise' && ev.warn) {
+      const a = 0.18 + 0.12 * Math.sin(time * 6);
+      const wg = ctx.createLinearGradient(0, H * 0.6, 0, H);
+      wg.addColorStop(0, 'rgba(255,107,91,0)'); wg.addColorStop(1, `rgba(255,107,91,${a})`);
+      ctx.fillStyle = wg; ctx.fillRect(0, H * 0.6, W, H * 0.4);
+    }
+    if (flash > 0) { ctx.fillStyle = `rgba(255,80,60,${flash * 0.35})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
     ctx.restore();
 
     drawGauge(d);
 
-    if (inPlay) layoutGaps(y, r.phase === 'pass' ? Math.max(0, 1 - r.passT * 2.4) : 1);
+    if (inPlay && ev.type === 'shelf') layoutShelf(ev, wy);
+    if (inPlay && ev.type === 'boss' && ev.v) layoutOrbs(ev.v);
   }
-
+  function layoutShelf(ev, y) {
+    const kids = $('labels').children;
+    if (!kids.length) return;
+    const alpha = ev.phase === 'pass' ? Math.max(0, 1 - ev.passT * 2.4) : 1;
+    if (ev.hatch) { place(kids[0], W / 2, y, Math.min(W * 0.5, 130), alpha); return; }
+    const lw = W / ev.n, w = Math.min(lw - 8, Math.min(lw * 0.74, 150) + 28);
+    for (let i = 0; i < kids.length; i++) place(kids[i], laneX(i, ev.n), y, w, alpha);
+  }
+  function layoutOrbs(v) {
+    const kids = $('labels').children;
+    if (!kids.length) return;
+    const w = Math.min((W / v.n) - 10, 170);
+    for (let i = 0; i < kids.length && i < v.orbs.length; i++) place(kids[i], v.orbs[i].x, v.orbs[i].y, w, 1);
+  }
   function drawGauge(d) {
     const top = 14, bottom = H - 14, x = 12;
     const yOf = (m) => top + (bottom - top) * Math.sqrt(m / MAX_DEPTH);
@@ -1032,85 +1630,146 @@
     ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
     ctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace';
     ctx.textBaseline = 'middle';
-    const labels = W >= 620;
+    const labels = W >= 620 && (!S.ev || S.ev.type === 'cruise');
     for (const [m, name] of [...ZONES, [MAX_DEPTH, 'Challenger Deep']]) {
       const yy = yOf(m);
       ctx.fillStyle = 'rgba(160,195,205,.55)'; ctx.fillRect(x - 4, yy, 9, 1);
       if (labels && m > 0) ctx.fillText(`${fmt(m)} m · ${name}`, x + 10, yy);
     }
+    for (const m of S.bossesAt.slice(S.bossesDone)) {
+      ctx.fillStyle = 'rgba(255,107,91,.85)'; ctx.beginPath(); ctx.arc(x, yOf(m), 3.5, 0, Math.PI * 2); ctx.fill();
+    }
     const yy = yOf(Math.min(MAX_DEPTH, d));
     ctx.fillStyle = '#ffb547';
     ctx.beginPath(); ctx.moveTo(x - 5, yy - 5); ctx.lineTo(x + 3, yy); ctx.lineTo(x - 5, yy + 5); ctx.fill();
+    ctx.textBaseline = 'alphabetic';
   }
 
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    update(S.mode === 'paused' ? 0 : dt);
+    update(S.mode === 'paused' || S.mode === 'refit' ? 0 : dt);
     draw();
     renderHud();
     requestAnimationFrame(frame);
   }
 
   /* ================= Input ================= */
+  const KEYMAP = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
   document.addEventListener('keydown', (e) => {
-    const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+    const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement;
     if (e.key === 'Escape' || (!typing && (e.key === 'p' || e.key === 'P'))) {
       if (S.mode === 'play') { pauseGame(); e.preventDefault(); }
       else if (S.mode === 'paused') { resumeGame(); e.preventDefault(); }
       return;
     }
     if (typing || S.mode !== 'play') return;
-    const r = S.round;
-    if (!r) return;
-    if (r.phase === 'crashed' || r.phase === 'breached') {
+    const ev = S.ev;
+    if (KEYMAP[e.key]) { keys.add(KEYMAP[e.key]); e.preventDefault(); return; }
+    if (!ev) return;
+    if (ev.type === 'shelf' && (ev.phase === 'crashed' || ev.phase === 'breached')) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); continueDive(); }
       return;
     }
-    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); steer(-1); }
-    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); steer(1); }
-    else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') { if (e.target.classList?.contains('gap')) return; e.preventDefault(); commit(S.lane); }
-    else if (/^[1-9]$/.test(e.key)) commit(+e.key - 1);
-    else if (e.key === 's' || e.key === 'S') useSonar();
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') {
+      if (e.target.classList && e.target.classList.contains('tag')) return;
+      e.preventDefault();
+      if (ev.type === 'shelf' && !ev.hatch) chooseLane(laneUnderSub(ev));
+    } else if (/^[1-9]$/.test(e.key)) {
+      const i = +e.key - 1;
+      if (ev.type === 'shelf') chooseLane(i);
+      else if (ev.type === 'boss' && ev.v && !ev.v.done && i < ev.v.n && !ev.v.closed.has(i)) S.autoOrb = i;
+    } else if (e.key === 's' || e.key === 'S') useSonar();
   });
+  document.addEventListener('keyup', (e) => { if (KEYMAP[e.key]) keys.delete(KEYMAP[e.key]); });
+  window.addEventListener('blur', () => keys.clear());
+  const px = (e) => e.clientX - cv.getBoundingClientRect().left;
   $('stage').addEventListener('pointerdown', (e) => {
-    const r = S.round;
-    if (S.mode !== 'play' || !r || r.phase !== 'approach' || r.hatch || e.target !== cv) return;
-    const rect = cv.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-    if (Math.abs(y - wallY(r)) < band() + 30) commit(Math.floor(x / (W / r.n)));
+    if (S.mode !== 'play' || e.target !== cv) return;
+    pointer.active = true; pointer.x = px(e);
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ }
   });
+  cv.addEventListener('pointermove', (e) => { if (pointer.active) pointer.x = px(e); });
+  const endPointer = () => { pointer.active = false; };
+  cv.addEventListener('pointerup', endPointer);
+  cv.addEventListener('pointercancel', endPointer);
   $('hatchForm').addEventListener('submit', (e) => { e.preventDefault(); submitHatch(); });
   $('btnContinue').addEventListener('click', continueDive);
-  $('btnSonar').addEventListener('click', useSonar);
-  $('btnSound').addEventListener('click', () => { S.muted = !S.muted; store.set('muted', S.muted); syncSound(); });
+  $('btnSonar').addEventListener('click', (e) => { useSonar(); e.currentTarget.blur(); });
+  $('btnSound').addEventListener('click', (e) => { S.muted = !S.muted; store.set('muted', S.muted); syncSound(); e.currentTarget.blur(); });
   function syncSound() { $('btnSound').textContent = S.muted ? 'Sound off' : 'Sound on'; $('btnSound').setAttribute('aria-pressed', String(!S.muted)); }
-  $('btnPause').addEventListener('click', () => (S.mode === 'paused' ? resumeGame() : pauseGame()));
-  function pauseGame() { if (S.mode !== 'play') return; S.mode = 'paused'; $('pause').hidden = false; $('btnResume').focus(); }
-  function resumeGame() { if (S.mode !== 'paused') return; S.mode = 'play'; $('pause').hidden = true; last = performance.now(); if (S.round?.hatch && S.round.phase === 'approach') $('hatchInput').focus({ preventScroll: true }); }
+  $('btnPause').addEventListener('click', (e) => { if (S.mode === 'paused') resumeGame(); else pauseGame(); e.currentTarget.blur(); });
+  function pauseGame() { if (S.mode !== 'play') return; S.mode = 'paused'; keys.clear(); pointer.active = false; $('pause').hidden = false; $('btnResume').focus(); }
+  function resumeGame() {
+    if (S.mode !== 'paused') return;
+    S.mode = 'play'; $('pause').hidden = true; last = performance.now();
+    if (S.ev && S.ev.type === 'shelf' && S.ev.hatch && S.ev.phase === 'approach') $('hatchInput').focus({ preventScroll: true });
+  }
   $('btnResume').addEventListener('click', resumeGame);
   $('btnAbort').addEventListener('click', () => { $('pause').hidden = true; toSetup(); });
+  $('btnRefitGo').addEventListener('click', () => {
+    $('refit').hidden = true; S.mode = 'play'; last = performance.now();
+    nextAfterAnswer();
+  });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
   /* ================= Setup ================= */
+  function aiPrompt() {
+    const topic = $('topic').value.trim() || '[YOUR TOPIC]';
+    const n = $('aiCount').value;
+    return `Make ${n} quiz questions about ${topic}.
+
+Reply with only the lines below: no numbering, no headings, no extra text.
+First line: Topic: ${topic}
+Then one question per line in exactly this format:
+Question | Correct answer | Wrong answer | Wrong answer | Wrong answer
+
+Rules:
+- Keep every answer short (1 to 6 words).
+- Make the wrong answers believable, never silly.
+- Never use the | character inside a question or answer.
+- Mix easy and hard questions.
+
+Example line:
+What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | Helium`;
+  }
+  function refreshPrompt() { $('aiPrompt').textContent = aiPrompt(); }
+  $('btnCopy').addEventListener('click', () => {
+    const text = aiPrompt(), note = $('copyNote');
+    const selectIt = () => {
+      const range = document.createRange(); range.selectNodeContents($('aiPrompt'));
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      note.textContent = 'Selected. Press Ctrl+C (or ⌘C) to copy.';
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => { note.textContent = 'Copied. Paste it into any AI chat.'; }, selectIt);
+    } catch (e) { selectIt(); }
+  });
+
   function toSetup() {
-    S.mode = 'setup'; S.round = null; S.streak = 0; S.hull = 3; S.lane = 0;
-    S.depthTarget = 0;
-    $('gaps').replaceChildren(); $('crash').hidden = true; $('hatchForm').hidden = true; $('end').hidden = true;
-    $('rQuestion').textContent = 'Paste your questions to plot a dive.';
+    S.mode = 'setup'; S.ev = null; S.streak = 0; S.hp = S.maxHp = 6; S.depthTarget = 0; S.overdrive = 0; S.invuln = 0;
+    S.bossesAt = [];
+    ents = []; flares = [];
+    clearLabels();
+    ['crash', 'hatchForm', 'end', 'bossBar', 'banner', 'refit'].forEach((id) => { $(id).hidden = true; });
+    setIdle('Paste your questions to plot a dive.');
     $('rCount').textContent = 'Dive plan';
-    $('clockFill').style.transform = 'scaleX(1)';
     $('setup').hidden = false;
     refreshParse();
+    renderHud(true);
   }
   function refreshParse() {
-    const { cards, skipped } = parseDeck($('deck').value);
+    const { cards, skipped, topic } = parseDeck($('deck').value);
+    if (topic && document.activeElement !== $('topic') && $('topic').value.trim() !== topic) { $('topic').value = topic; refreshPrompt(); }
     const st = $('parseStatus');
     const playable = cards.length >= 2 || (cards.length === 1 && cards[0].decoys.length > 0);
     if (!cards.length) { st.textContent = 'No questions found yet.'; st.className = 'status warn'; }
     else {
+      const withWrong = cards.filter((c) => c.decoys.length).length;
       st.textContent = `${cards.length} ${cards.length === 1 ? 'question' : 'questions'} ready` +
-        (skipped.length ? ` · ${skipped.length} ${skipped.length === 1 ? 'line' : 'lines'} skipped (no answer found): “${skipped[0].slice(0, 40)}”` : '') +
+        (withWrong ? ` · ${withWrong} with their own wrong answers` : '') +
+        (skipped.length ? ` · ${skipped.length} ${skipped.length === 1 ? 'line' : 'lines'} skipped: “${skipped[0].slice(0, 40)}”` : '') +
         (playable ? '' : ' · add at least one more question');
       st.className = 'status' + (skipped.length || !playable ? ' warn' : '');
     }
@@ -1120,13 +1779,15 @@
   function saveSetup() {
     store.set('topic', $('topic').value); store.set('deck', $('deck').value);
     store.set('pace', document.querySelector('input[name=pace]:checked').value); store.set('hatches', $('hatches').checked);
+    store.set('aiCount', $('aiCount').value);
   }
   $('deck').addEventListener('input', () => { refreshParse(); saveSetup(); });
-  $('topic').addEventListener('input', saveSetup);
+  $('topic').addEventListener('input', () => { refreshPrompt(); saveSetup(); });
+  $('aiCount').addEventListener('change', () => { refreshPrompt(); saveSetup(); });
   $('hatches').addEventListener('change', saveSetup);
   document.querySelectorAll('input[name=pace]').forEach((el) => el.addEventListener('change', saveSetup));
-  $('btnSample').addEventListener('click', () => { $('topic').value = SAMPLE_TOPIC; $('deck').value = SAMPLE; refreshParse(); saveSetup(); });
-  $('btnClear').addEventListener('click', () => { $('topic').value = ''; $('deck').value = ''; refreshParse(); saveSetup(); $('deck').focus(); });
+  $('btnSample').addEventListener('click', () => { $('topic').value = SAMPLE_TOPIC; $('deck').value = SAMPLE; refreshParse(); refreshPrompt(); saveSetup(); });
+  $('btnClear').addEventListener('click', () => { $('deck').value = ''; refreshParse(); saveSetup(); $('deck').focus(); });
   $('setupForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const { cards, playable } = refreshParse();
@@ -1150,15 +1811,17 @@
     data = data || {};
     $('topic').value = data.topic ?? store.get('topic', SAMPLE_TOPIC);
     $('deck').value = data.deck ?? store.get('deck', SAMPLE);
-    const pace = store.get('pace', 'standard');
-    const paceEl = document.querySelector(`input[name=pace][value="${pace}"]`);
+    $('aiCount').value = String(store.get('aiCount', '20'));
+    const paceEl = document.querySelector(`input[name=pace][value="${store.get('pace', 'standard')}"]`);
     if (paceEl) paceEl.checked = true;
     $('hatches').checked = store.get('hatches', true);
     if (COARSE) $('hint').hidden = true;
     syncSound();
     resize();
-    S.subX = W / 2;
+    S.x = W / 2;
     refreshParse();
+    refreshPrompt();
+    renderHud(true);
     requestAnimationFrame(frame);
   }
   try { window.claude?.hot?.snapshot?.(() => ({ topic: $('topic').value, deck: $('deck').value })); } catch (e) { /* optional */ }
