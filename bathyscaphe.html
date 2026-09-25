@@ -20,8 +20,7 @@
     --sodium: #ffb547;
     --sodium-ink: #241500;
     --lume: #6fe3cf;
-    --pearl: #ffe9f2;
-    --breach: #ff6b5b;
+    --soft-red: #ff8a7a;
     --display: 'Big Shoulders Stencil Display', 'Saira Stencil One', Impact, 'Arial Narrow', sans-serif;
     --body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -47,13 +46,7 @@
   .gauge { display: flex; flex-direction: column; gap: 4px; }
   .label { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .val { font-family: var(--mono); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
-  .val.pearls { color: var(--pearl); }
-  .hull { display: flex; gap: 5px; align-items: center; height: 20px; }
-  .hull i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--sodium); box-sizing: border-box; background: var(--sodium); transition: background 0.2s, border-color 0.2s; }
-  .hull i.half { background: linear-gradient(90deg, var(--sodium) 50%, transparent 50%); }
-  .hull i.off { background: transparent; border-color: var(--breach); opacity: 0.55; }
-  .hull.hit i { animation: hit 0.35s; }
-  @keyframes hit { 50% { transform: scale(1.35); } }
+  .val.log-count { color: var(--lume); }
   .tools { display: flex; gap: 6px; flex-wrap: wrap; }
 
   .btn {
@@ -73,7 +66,6 @@
   #rZone { color: var(--lume); }
   .question { margin: 0; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.35; font-weight: 700; text-wrap: balance; max-height: 6.9em; overflow: auto; }
   .question.idle { font-weight: 400; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
-  .question.alarm { color: var(--breach); }
   .hatch-form { display: grid; gap: 6px; padding-bottom: 4px; }
   .hatch-row { display: flex; gap: 8px; }
   .hatch-row input { flex: 1; min-width: 0; }
@@ -82,7 +74,7 @@
 
   /* ---------- Stage ---------- */
   .stage { position: relative; min-height: 240px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #04101c; touch-action: none; user-select: none; -webkit-user-select: none; }
-  #sea { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+  #sea { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #labels { position: absolute; inset: 0; pointer-events: none; }
   .tag {
     position: absolute; top: 0; left: 0; pointer-events: auto; box-sizing: border-box;
@@ -92,40 +84,38 @@
     transition: border-color 0.15s, box-shadow 0.15s, opacity 0.25s, color 0.15s;
   }
   .tag .k { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
-  .tag.orb { border-radius: 999px; padding: 8px 14px; border-color: rgba(111, 227, 207, 0.55); background: rgba(3, 18, 24, 0.86); box-shadow: 0 0 18px rgba(111, 227, 207, 0.25); }
   .tag.aim { border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.16), 0 0 26px rgba(255, 181, 71, 0.22); }
   .tag.right { border-color: var(--lume); color: #eafffb; box-shadow: 0 0 24px rgba(111, 227, 207, 0.45); }
-  .tag.wrong { border-color: var(--breach); color: #ffd9d4; }
+  .tag.wrong { border-color: var(--soft-red); color: #ffe0da; }
   .tag.sealed { opacity: 0.22; text-decoration: line-through; pointer-events: none; }
   .tag.hatch { cursor: default; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sodium); border-color: rgba(255, 181, 71, 0.5); }
 
   .toast {
-    position: absolute; top: 12px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 2;
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 2;
     font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
     padding: 6px 12px; border-radius: 999px; background: rgba(3, 12, 20, 0.85); border: 1px solid var(--lume); color: var(--lume);
   }
-  .toast.low { top: 58px; }
-  .toast.hot { border-color: var(--sodium); color: var(--sodium); }
-  .boss-bar { position: absolute; top: 12px; left: 32px; right: 16px; display: grid; gap: 5px; pointer-events: none; }
-  .boss-bar .label { color: #ffb3a8; }
-  .boss-track { height: 8px; border-radius: 4px; background: rgba(255, 107, 91, 0.15); border: 1px solid rgba(255, 107, 91, 0.4); overflow: hidden; }
-  #bossFill { height: 100%; background: var(--breach); transform-origin: left; transition: transform 0.35s; }
-  .banner {
-    position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%); width: min(420px, calc(100% - 28px)); box-sizing: border-box; pointer-events: none;
-    background: rgba(8, 26, 39, 0.94); border: 1px solid var(--breach); border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px; text-align: center;
+  .fact {
+    position: absolute; top: 12px; right: 12px; width: min(330px, calc(100% - 48px)); box-sizing: border-box; pointer-events: none; z-index: 2;
+    display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px;
+    background: rgba(6, 22, 32, 0.92); border: 1px solid rgba(111, 227, 207, 0.5);
+    animation: rise 0.35s ease-out;
   }
-  .banner p { margin: 0; }
-  .banner .label { color: var(--breach); }
+  .fact p { margin: 0; }
+  .fact .label { color: var(--lume); }
+  .fact .name { font-weight: 700; font-size: 16px; }
+  .fact .text { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
+  @keyframes rise { from { opacity: 0; transform: translateY(-6px); } }
   .crash {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(420px, calc(100% - 28px)); box-sizing: border-box;
-    background: rgba(8, 26, 39, 0.95); border: 1px solid var(--breach); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; overflow: hidden;
+    background: rgba(8, 26, 39, 0.95); border: 1px solid var(--soft-red); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; overflow: hidden;
   }
   .crash p { margin: 0; }
-  .crash .label { color: var(--breach); }
+  .crash .label { color: var(--soft-red); }
   .ans { font-size: 19px; font-weight: 700; color: var(--lume); overflow-wrap: anywhere; }
   .note { font-size: 13px; color: var(--muted); }
   .crash .btn { justify-self: start; margin-top: 4px; }
-  .crash-timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--breach); transform-origin: left; }
+  .crash-timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--soft-red); transform-origin: left; }
   .hint { position: absolute; right: 12px; bottom: 8px; margin: 0; font-family: var(--mono); font-size: 10.5px; color: rgba(160, 195, 205, 0.6); pointer-events: none; }
 
   /* ---------- Overlays ---------- */
@@ -158,7 +148,7 @@
   .help { font-size: 13px; color: var(--muted); }
   .help code { font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--field); padding: 1px 5px; border-radius: 4px; }
   .status { font-family: var(--mono); font-size: 12px; color: var(--lume); }
-  .status.warn { color: var(--breach); }
+  .status.warn { color: var(--soft-red); }
   .opts { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: end; }
   .seg { display: flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
   .seg label { cursor: pointer; }
@@ -173,29 +163,23 @@
   kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; color: var(--ink); }
   .copy-note { font-size: 12px; color: var(--lume); }
 
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .stat { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
   .stat .val { font-size: 20px; }
   .record { font-family: var(--mono); font-size: 12px; color: var(--sodium); }
-  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 240px; overflow: auto; }
-  .log li { display: grid; gap: 2px; padding: 8px 12px; border-left: 3px solid var(--breach); background: var(--field); border-radius: 0 8px 8px 0; }
+  .book { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .entry { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); }
+  .entry .n { font-size: 13.5px; font-weight: 700; }
+  .entry .z { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .entry.locked .n { color: var(--muted); font-weight: 400; }
+  .entry.new { border-color: var(--lume); }
+  .entry.new .z { color: var(--lume); }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 220px; overflow: auto; }
+  .log li { display: grid; gap: 2px; padding: 8px 12px; border-left: 3px solid var(--soft-red); background: var(--field); border-radius: 0 8px 8px 0; }
   .log li.clean { border-left-color: var(--lume); color: var(--lume); }
   .log .q { font-size: 14px; }
   .log .a { font-size: 14px; font-weight: 700; color: var(--lume); }
   .log .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-
-  .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .card {
-    display: grid; gap: 6px; align-content: start; text-align: left; padding: 14px; border-radius: 12px; cursor: pointer;
-    background: var(--field); border: 1px solid var(--line-strong); transition: border-color 0.15s, transform 0.15s;
-  }
-  .card:hover:not(:disabled) { border-color: var(--sodium); transform: translateY(-2px); }
-  .card:disabled { cursor: default; opacity: 0.45; transform: none; }
-  .card.bought { opacity: 1; border-color: var(--lume); }
-  .card .name { font-weight: 700; font-size: 15px; }
-  .card .desc { font-size: 13px; color: var(--muted); line-height: 1.4; }
-  .card .cost { font-family: var(--mono); font-size: 12px; color: var(--pearl); }
-  .card.bought .cost { color: var(--lume); }
 
   @media (max-width: 560px) {
     .wide { display: none !important; }
@@ -203,11 +187,12 @@
     .gauges { gap: 6px 14px; }
     .sheet { padding: 18px; }
     .stats { grid-template-columns: repeat(2, 1fr); }
-    .shop, .features { grid-template-columns: 1fr; }
+    .features { grid-template-columns: 1fr; }
     .tag { font-size: 12.5px; padding: 5px 5px 6px; }
     .hint { display: none; }
   }
   @media (max-height: 620px) { .question { max-height: 4.2em; } }
+  @media (prefers-reduced-motion: reduce) { .fact { animation: none; } }
 </style>
 
 <div id="app">
@@ -219,13 +204,12 @@
     <div class="gauges">
       <div class="gauge"><span class="label">Depth</span><span class="val" id="gDepth">0 m</span></div>
       <div class="gauge wide"><span class="label">Pressure</span><span class="val" id="gPress">1 atm</span></div>
-      <div class="gauge"><span class="label">Hull</span><span class="hull" id="gHull"></span></div>
-      <div class="gauge"><span class="label">Pearls</span><span class="val pearls" id="gPearls">0</span></div>
       <div class="gauge"><span class="label">Streak</span><span class="val" id="gStreak">0</span></div>
+      <div class="gauge"><span class="label">Logbook</span><span class="val log-count" id="gLog">0/14</span></div>
       <div class="gauge wide"><span class="label">Score</span><span class="val" id="gScore">0</span></div>
     </div>
     <div class="tools">
-      <button class="btn" id="btnSonar" type="button" title="Sonar knocks out wrong answers (S)">Sonar <b id="sonarCount">1</b></button>
+      <button class="btn" id="btnSonar" type="button" title="Sonar crosses out two wrong answers (S)">Hint <b id="sonarCount">2</b></button>
       <button class="btn" id="btnSound" type="button" aria-pressed="true">Sound on</button>
       <button class="btn" id="btnPause" type="button">Pause</button>
     </div>
@@ -238,7 +222,7 @@
       <label class="label" for="hatchInput">Sealed hatch · type the answer to open it</label>
       <div class="hatch-row">
         <input id="hatchInput" type="text" spellcheck="false" autocapitalize="off" autocomplete="off">
-        <button class="btn primary" type="submit">Transmit</button>
+        <button class="btn primary" type="submit">Open</button>
       </div>
     </form>
     <div class="clock"><div id="clockFill"></div></div>
@@ -247,25 +231,21 @@
   <main class="stage" id="stage">
     <canvas id="sea" aria-hidden="true"></canvas>
     <div id="labels" lang="en"></div>
-    <div class="boss-bar" id="bossBar" hidden>
-      <span class="label" id="bossName">Giant squid</span>
-      <div class="boss-track"><div id="bossFill"></div></div>
+    <div class="fact" id="fact" hidden>
+      <p class="label" id="factTitle">New in your logbook</p>
+      <p class="name" id="factName"></p>
+      <p class="text" id="factText"></p>
     </div>
     <div class="toast" id="toast" hidden></div>
-    <div class="banner" id="banner" hidden>
-      <p class="label" id="bannerTitle">Lashed</p>
-      <p class="note">The right answer was</p>
-      <p class="ans" id="bannerAns"></p>
-    </div>
     <div class="crash" id="crash" hidden role="status">
-      <p class="label" id="crashTitle">Impact</p>
-      <p class="note">The open passage was marked</p>
+      <p class="label">Not quite</p>
+      <p class="note">The right passage was</p>
       <p class="ans" id="crashAns"></p>
-      <p class="note" id="crashNote">This question will come around again before you reach the bottom.</p>
+      <p class="note">This one will come back around later.</p>
       <button class="btn primary" id="btnContinue" type="button">Continue</button>
       <div class="crash-timer" id="crashTimer"></div>
     </div>
-    <p class="hint" id="hint">← → steer · space surge · 1–4 pick · S sonar</p>
+    <p class="hint" id="hint">← → steer · space go · 1–4 pick · S hint</p>
   </main>
 </div>
 
@@ -275,12 +255,12 @@
     <div class="stack">
       <span class="label">Dive plan</span>
       <h1>Bathyscaphe</h1>
-      <p class="lede">Pilot a deep-sea sub to the bottom of the ocean. Your questions are the obstacles, and only right answers get you deeper.</p>
+      <p class="lede">A relaxed trip to the bottom of the ocean. Answer questions to sink deeper, and photograph the sea life you meet on the way down.</p>
       <ul class="features">
-        <li><b>Open water.</b> Weave past rocks and anglerfish, scoop up pearls.</li>
-        <li><b>Rock shelves.</b> Steer through the passage marked with the right answer.</li>
-        <li><b>Sea monsters.</b> Swim into the right answer to fire a flare at a giant squid.</li>
-        <li><b>Refits.</b> Spend pearls on armour, a brighter lamp, thrusters and more.</li>
+        <li><b>Answer to descend.</b> Steer through the opening marked with the right answer.</li>
+        <li><b>Photograph sea life.</b> Glide close to a creature to snap it and learn a fact.</li>
+        <li><b>No game over.</b> A wrong answer just comes back later for another try.</li>
+        <li><b>Fill the logbook.</b> 14 real species live at different depths. Can you find them all?</li>
       </ul>
     </div>
 
@@ -314,21 +294,21 @@
 
     <div class="opts">
       <div class="field">
-        <span class="label" id="paceLabel">Question speed</span>
+        <span class="label" id="paceLabel">Time per question</span>
         <div class="seg" role="radiogroup" aria-labelledby="paceLabel">
-          <label><input type="radio" name="pace" id="paceCalm" value="calm"><span>Calm</span></label>
-          <label><input type="radio" name="pace" id="paceStandard" value="standard" checked><span>Standard</span></label>
-          <label><input type="radio" name="pace" id="paceSwift" value="swift"><span>Swift</span></label>
+          <label><input type="radio" name="pace" id="paceCalm" value="calm"><span>Relaxed</span></label>
+          <label><input type="radio" name="pace" id="paceStandard" value="standard" checked><span>Normal</span></label>
+          <label><input type="radio" name="pace" id="paceSwift" value="swift"><span>Quick</span></label>
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="hatches" checked> Sealed hatches (type the answer now and then)</label>
+      <label class="check"><input type="checkbox" id="hatches"> Now and then, type the answer instead</label>
     </div>
     <div class="row">
       <button class="btn primary" type="submit" id="btnBegin">Begin descent</button>
       <button class="btn" type="button" id="btnSample">Load sample deck</button>
       <button class="btn" type="button" id="btnClear">Clear</button>
     </div>
-    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer (or drag on the water) · <kbd>Space</kbd> surge through a shelf · <kbd>1</kbd>–<kbd>4</kbd> pick an answer · <kbd>S</kbd> sonar · <kbd>Esc</kbd> pause</p>
+    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer (or drag on the water) · <kbd>1</kbd>–<kbd>4</kbd> or click an answer · <kbd>Space</kbd> go through the opening you're over · <kbd>S</kbd> hint · <kbd>Esc</kbd> pause</p>
   </form>
 </div>
 
@@ -337,7 +317,7 @@
   <div class="sheet small">
     <span class="label">Holding position</span>
     <h2>Paused</h2>
-    <p class="help">Nothing moves while you hold.</p>
+    <p class="help">Take your time.</p>
     <div class="row">
       <button class="btn primary" type="button" id="btnResume">Resume dive</button>
       <button class="btn" type="button" id="btnAbort">Surface to dive plan</button>
@@ -345,43 +325,32 @@
   </div>
 </div>
 
-<!-- Refit shop -->
-<div class="overlay" id="refit" hidden>
-  <div class="sheet">
-    <div class="stack">
-      <span class="label" id="refitEyebrow">Monster driven off</span>
-      <h2>Refit</h2>
-      <p class="help">A support tender drops a crate. Spend pearls on as many upgrades as you can afford. <b class="val pearls" id="refitPearls">0 pearls</b></p>
-    </div>
-    <div class="shop" id="shop"></div>
-    <div class="row"><button class="btn primary" type="button" id="btnRefitGo">Continue the descent</button></div>
-  </div>
-</div>
-
 <!-- Debrief -->
 <div class="overlay" id="end" hidden>
   <div class="sheet">
     <div class="stack">
-      <span class="label" id="endEyebrow">Touchdown</span>
-      <h2 id="endTitle">You reached Challenger Deep</h2>
+      <span class="label">Touchdown</span>
+      <h2>You reached Challenger Deep</h2>
       <p class="help" id="endSub"></p>
     </div>
     <div class="stats">
-      <div class="stat"><span class="label">Max depth</span><span class="val" id="sDepth">0 m</span></div>
       <div class="stat"><span class="label">Accuracy</span><span class="val" id="sAcc">0%</span></div>
       <div class="stat"><span class="label">Best streak</span><span class="val" id="sStreak">0</span></div>
-      <div class="stat"><span class="label">Pearls</span><span class="val pearls" id="sPearls">0</span></div>
-      <div class="stat"><span class="label">Monsters</span><span class="val" id="sBoss">0</span></div>
+      <div class="stat"><span class="label">Photos</span><span class="val" id="sPhotos">0</span></div>
       <div class="stat"><span class="label">Score</span><span class="val" id="sScore">0</span></div>
     </div>
     <p class="record" id="sRecord"></p>
     <div class="stack">
-      <span class="label">Dive log · wrong turns</span>
+      <span class="label" id="bookTitle">Logbook</span>
+      <div class="book" id="book"></div>
+    </div>
+    <div class="stack">
+      <span class="label">Questions to review</span>
       <ul class="log" id="log"></ul>
     </div>
     <div class="row">
       <button class="btn primary" type="button" id="btnAgain">Dive again</button>
-      <button class="btn" type="button" id="btnDrill">Drill the missed ones</button>
+      <button class="btn" type="button" id="btnDrill">Practise the missed ones</button>
       <button class="btn" type="button" id="btnEdit">Edit questions</button>
     </div>
   </div>
@@ -399,19 +368,25 @@
   const MAX_DEPTH = 10935;
   const ZONES = [[0, 'Sunlight zone'], [200, 'Twilight zone'], [1000, 'Midnight zone'], [4000, 'Abyssal zone'], [6000, 'Hadal zone']];
   const WATER = [[0, [27, 111, 143]], [200, [14, 63, 92]], [1000, [7, 31, 51]], [4000, [4, 15, 28]], [MAX_DEPTH, [1, 5, 11]]];
-  const PACE = { calm: 20, standard: 13, swift: 8 };
-  const BOSSES = [
-    { name: 'Giant squid', color: '#b8483f', dark: '#6d211c', eye: '#ffe07a' },
-    { name: 'Colossal squid', color: '#9a3f78', dark: '#4f1a3d', eye: '#a8f6ff' },
-    { name: 'The Leviathan', color: '#2f6a7c', dark: '#123440', eye: '#ff6b5b' },
+  const PACE = { calm: 22, standard: 15, swift: 10 };
+
+  // Real species, each placed in the depth zone where it lives. zone = index into ZONES.
+  const CREATURES = [
+    { id: 'clownfish', name: 'Clownfish', zone: 0, kind: 'fish', size: 15, body: '#ff8a3d', stripe: '#ffffff', fact: 'Clownfish live among stinging sea anemones, protected by a coat of slimy mucus.' },
+    { id: 'turtle', name: 'Green sea turtle', zone: 0, kind: 'turtle', size: 26, body: '#7aa35f', fact: 'Resting green sea turtles can stay underwater for hours on a single breath.' },
+    { id: 'tang', name: 'Blue tang', zone: 0, kind: 'fish', size: 16, body: '#2f7fe0', tail: '#ffd23f', fact: 'Blue tangs hide a scalpel-sharp spine at the base of their tail.' },
+    { id: 'moonjelly', name: 'Moon jellyfish', zone: 0, kind: 'jelly', size: 17, glow: '220,235,255', fact: 'Moon jellyfish have no brain, no heart and no bones.' },
+    { id: 'lanternfish', name: 'Lanternfish', zone: 1, kind: 'fish', size: 12, body: '#8aa0ab', dots: true, fact: 'Lanternfish make up a huge share of all the fish in the deep sea.' },
+    { id: 'hatchetfish', name: 'Hatchetfish', zone: 1, kind: 'hatchet', size: 13, body: '#c9d6dc', fact: 'Hatchetfish glow on their bellies to erase their own shadow from predators below.' },
+    { id: 'whale', name: 'Sperm whale', zone: 1, kind: 'whale', size: 64, body: '#56636c', fact: 'Sperm whales dive past 2,000 m to hunt squid in total darkness.' },
+    { id: 'angler', name: 'Anglerfish', zone: 2, kind: 'angler', size: 20, body: '#4a3b34', fact: 'An anglerfish lure glows thanks to bacteria living inside it.' },
+    { id: 'vampsquid', name: 'Vampire squid', zone: 2, kind: 'squid', size: 19, body: '#8a2f44', fact: 'Despite the name, vampire squid eat marine snow, not blood.' },
+    { id: 'gulper', name: 'Gulper eel', zone: 2, kind: 'eel', size: 34, body: '#3a3f4c', fact: 'A gulper eel’s huge hinged mouth can swallow prey far bigger than its skinny body suggests.' },
+    { id: 'dumbo', name: 'Dumbo octopus', zone: 3, kind: 'dumbo', size: 18, body: '#f0a8b0', fact: 'Dumbo octopuses flap ear-like fins to glide just above the seafloor.' },
+    { id: 'tripod', name: 'Tripod fish', zone: 3, kind: 'tripod', size: 16, body: '#b9c2c8', fact: 'Tripod fish stand on three stiff fin rays and wait for food to drift into their mouths.' },
+    { id: 'snailfish', name: 'Hadal snailfish', zone: 4, kind: 'fish', size: 15, body: '#f3d9d3', fact: 'Snailfish have been filmed alive more than 8,300 m down, deeper than any other fish.' },
+    { id: 'amphipod', name: 'Supergiant amphipod', zone: 4, kind: 'shrimp', size: 15, body: '#ece3cf', fact: 'Supergiant amphipods scavenge in ocean trenches and can grow longer than your hand.' },
   ];
-  const CRUISE_LINES = {
-    'Sunlight zone': ['Open water. Scoop up pearls and steer around the rocks.', 'Sunbeams still reach this far. Enjoy them while they last.'],
-    'Twilight zone': ['The light is fading. Lanternfish flicker at the edge of the lamp.', 'Twilight water. Keep an eye out for anglerfish lures.'],
-    'Midnight zone': ['No sunlight reaches here. Trust the lamp.', 'Pitch dark. Anything glowing out there is probably hungry.'],
-    'Abyssal zone': ['Near-freezing water, crushing pressure. Keep moving.', 'The abyssal plain. Rocks loom out of the dark with little warning.'],
-    'Hadal zone': ['Trench walls close in. Challenger Deep is below.', 'Deeper than almost anyone has been. Hold steady.'],
-  };
 
   const SAMPLE_TOPIC = 'The Deep Ocean';
   const SAMPLE = `Topic: The Deep Ocean
@@ -423,14 +398,10 @@ Which bathyscaphe first reached Challenger Deep, in 1960? | Trieste | Alvin | Na
 Roughly how deep is Challenger Deep, in metres? | 10,935 | 8,849 | 6,500 | 12,400
 What are seafloor cracks that spew hot, mineral-rich water? | Hydrothermal vents | Cold seeps | Brine pools | Mud volcanoes
 How do vent bacteria make food without sunlight? | Chemosynthesis | Photosynthesis | Fermentation | Osmosis
-Which fish dangles a glowing lure in front of its mouth? | Anglerfish | Viperfish | Gulper eel | Lanternfish
 What are the flakes of organic matter that sink from above called? | Marine snow | Sea foam | Plankton bloom | Silt rain
-What is the zone deeper than 6,000 metres called? | Hadal zone | Abyssal zone | Midnight zone | Benthic zone
 Who made a solo dive to Challenger Deep in 2012? | James Cameron | Jacques Piccard | Victor Vescovo | Sylvia Earle
 Pressure rises by about how much for every 10 m of seawater? | 1 atmosphere | 10 atmospheres | 0.1 atmosphere | 100 atmospheres
-What is the heaviest invertebrate ever recorded? | Colossal squid | Giant squid | Lion's mane jellyfish | Japanese spider crab
-Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 85% | About 62%
-Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfish | Moray eel`;
+Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 85% | About 62%`;
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('bathy:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -572,120 +543,100 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     return { options: list.map((o) => o.t), correctIdx: list.findIndex((o) => o.ok) };
   }
 
-  /* ================= Upgrades ================= */
-  const UPGRADES = [
-    { id: 'plating', name: 'Reinforced plating', desc: 'One more hull pip, and a full repair.', cost: 30, max: 2, apply() { S.maxHp += 2; S.hp = S.maxHp; } },
-    { id: 'repair', name: 'Repair crew', desc: 'Patch the hull back to full.', cost: 12, max: 99, ok: () => S.hp < S.maxHp, apply() { S.hp = S.maxHp; } },
-    { id: 'lamp', name: 'Arc lamp', desc: 'Your light reaches much further into the dark.', cost: 20, max: 3, apply() { S.up.lamp++; } },
-    { id: 'thrust', name: 'Vectored thrusters', desc: 'Steer 25% faster.', cost: 18, max: 3, apply() { S.up.thrust++; } },
-    { id: 'magnet', name: 'Pearl magnet', desc: 'Pulls pearls in from further away.', cost: 22, max: 3, apply() { S.up.magnet++; } },
-    { id: 'sonar', name: 'Sonar buoys', desc: 'Two extra sonar pings to knock out wrong answers.', cost: 15, max: 99, apply() { S.sonar += 2; } },
-    { id: 'ballast', name: 'Trim ballast', desc: 'Questions give you 15% more time.', cost: 24, max: 2, apply() { S.up.ballast++; } },
-  ];
-
   /* ================= Game state ================= */
   const S = {
-    mode: 'setup', ev: null, topic: SAMPLE_TOPIC, pace: 'standard', hatches: true, muted: store.get('muted', false),
+    mode: 'setup', ev: null, topic: SAMPLE_TOPIC, pace: 'standard', hatches: false, muted: store.get('muted', false),
     deck: [], queue: [], answerPool: [], lastCards: [], fullCards: [],
     total: 0, mastered: 0, attempts: 0, correct: 0, qNum: 0, missed: new Map(),
-    hp: 6, maxHp: 6, streak: 0, best: 0, score: 0, pearls: 0, pearlsTotal: 0, sonar: 1,
-    up: { lamp: 0, thrust: 0, magnet: 0, ballast: 0 }, bought: {},
-    bossesAt: [], bossesDone: 0, bossKills: 0, pendingBoss: false,
-    depthTarget: 0, depthShown: 0, maxDepth: 0,
-    x: 0, autoX: null, autoOrb: null, invuln: 0, overdrive: 0, scroll: 30,
+    streak: 0, best: 0, score: 0, sonar: 2,
+    depthTarget: 0, depthShown: 0,
+    x: 0, autoX: null, scroll: 20,
+    seen: new Set(store.get('logbook', [])), photosThisDive: new Set(), newThisDive: new Set(),
   };
-  let time = 0, shake = 0, toastTimer = 0, bannerTimer = 0, flash = 0, pearlChain = 0, pearlChainT = 0;
-  let ents = [], flares = [], snow = [], bubbles = [], bits = [], floaters = [];
+  let time = 0, shake = 0, toastTimer = 0, factTimer = 0, camFlash = 0;
+  let critters = [], snow = [], bubbles = [], shoals = [];
   const keys = new Set();
   const pointer = { active: false, x: 0 };
 
   const depthFor = (m, t) => MAX_DEPTH * Math.pow(t ? m / t : 0, 1.5);
-  const zoneOf = (d) => ZONES.reduce((z, cur) => (d >= cur[0] ? cur[1] : z), ZONES[0][1]);
+  const zoneIndex = (d) => ZONES.reduce((z, cur, i) => (d >= cur[0] ? i : z), 0);
+  const zoneOf = (d) => ZONES[zoneIndex(d)][1];
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
-  const timeScale = () => 1 + 0.15 * S.up.ballast;
-  const mult = () => (1 + Math.floor(S.streak / 3) * 0.5) * (S.overdrive > 0 ? 2 : 1);
+  const mult = () => 1 + Math.floor(S.streak / 3) * 0.5;
 
   function startGame(cards, pool) {
     S.fullCards = pool; S.lastCards = cards;
     S.deck = cards.map((c, i) => ({ ...c, id: i }));
     S.answerPool = pool.flatMap((c) => [c.a, ...c.decoys]);
     S.queue = shuffle([...S.deck]);
-    Object.assign(S, {
-      total: S.deck.length, mastered: 0, attempts: 0, correct: 0, qNum: 0, hp: 6, maxHp: 6, streak: 0, best: 0, score: 0,
-      pearls: 0, pearlsTotal: 0, sonar: 1, up: { lamp: 0, thrust: 0, magnet: 0, ballast: 0 }, bought: {},
-      bossesDone: 0, bossKills: 0, pendingBoss: false, depthTarget: 0, depthShown: 0, maxDepth: 0,
-      x: W / 2, autoX: null, autoOrb: null, invuln: 0, overdrive: 0,
-    });
-    S.bossesAt = S.total >= 10 ? [1000, 4000, 7500] : S.total >= 6 ? [3000] : [];
-    S.missed = new Map();
-    ents = []; flares = []; bits = []; floaters = [];
+    Object.assign(S, { total: S.deck.length, mastered: 0, attempts: 0, correct: 0, qNum: 0, streak: 0, best: 0, score: 0, sonar: 2, depthTarget: 0, depthShown: 0, x: W / 2, autoX: null });
+    S.missed = new Map(); S.photosThisDive = new Set(); S.newThisDive = new Set();
+    critters = [];
     S.mode = 'play';
     $('expName').textContent = 'Expedition · ' + S.topic;
-    ['setup', 'end', 'pause', 'refit', 'banner'].forEach((id) => { $(id).hidden = true; });
+    ['setup', 'end', 'pause', 'fact'].forEach((id) => { $(id).hidden = true; });
     renderHud(true);
-    startCruise(3.2, 'first');
+    startCruise('first');
   }
 
-  /* ---------- Open water ---------- */
-  function startCruise(len, kindOf) {
+  /* ---------- Open water: a short, calm glide between questions ---------- */
+  function startCruise(kindOf) {
     clearLabels();
-    $('hatchForm').hidden = true; $('crash').hidden = true; $('bossBar').hidden = true;
-    const warn = S.pendingBoss;
-    S.ev = { type: 'cruise', t: 0, len: warn ? len + 1 : len, spawnT: 0.4, warn };
-    S.autoX = null; S.autoOrb = null;
-    const zone = zoneOf(S.depthShown);
+    $('hatchForm').hidden = true; $('crash').hidden = true;
+    S.ev = { type: 'cruise', t: 0, len: kindOf === 'first' ? 5.5 : rand(4.5, 5.5), spawned: 0 };
+    S.autoX = null;
+    const z = zoneIndex(S.depthShown);
     const line = kindOf === 'first'
-      ? (COARSE ? 'Open water. Drag on the water to steer, grab pearls, dodge rocks.' : 'Open water. Steer with ← → (or drag) to grab pearls and dodge rocks.')
-      : warn ? 'Something enormous is rising on sonar…' : CRUISE_LINES[zone][Math.floor(Math.random() * 2)];
-    setIdle(line, warn);
-    $('rCount').textContent = `${S.mastered}/${S.total} cleared`;
-    if (warn) sfx.warn();
+      ? (COARSE ? 'Drag on the water to steer. Glide close to a creature to photograph it.' : 'Steer with ← → (or drag). Glide close to a creature to photograph it.')
+      : pickLine(z);
+    setIdle(line);
+    $('rCount').textContent = `${S.mastered}/${S.total} answered`;
+    spawnCritter();
   }
-  function afterCruise() {
-    if (S.pendingBoss) { S.pendingBoss = false; startBoss(); } else startShelf();
+  function pickLine(z) {
+    const lines = [
+      ['Sunlight still reaches this far. Reefs and turtles love it here.', 'Warm, bright water. Keep an eye out for bright little fish.'],
+      ['The light is fading to blue. Things start to glow down here.', 'Twilight water. Many animals here rise to the surface each night.'],
+      ['No sunlight reaches this deep. Every light you see is alive.', 'The midnight zone. Your lamp is the brightest thing for miles.'],
+      ['Near-freezing water on the abyssal plain. Life moves slowly here.', 'Soft mud below and not much food. Creatures here are patient.'],
+      ['Deep inside the trench now. Very few people have seen this.', 'The hadal zone, named after Hades. Almost there.'],
+    ][z];
+    return lines[Math.floor(Math.random() * lines.length)];
   }
-  function nextAfterAnswer() {
-    if (!S.queue.length) { touchdown(); return; }
-    startCruise(rand(3.4, 4.8), 'normal');
-  }
-
-  function spawnPattern() {
-    const d = S.depthShown / MAX_DEPTH, y0 = H + 40, r = Math.random();
-    if (r < 0.42) {
-      const n = 5 + Math.floor(Math.random() * 4), cx = rand(50, W - 50), amp = rand(20, 70), ph = rand(0, 6);
-      for (let k = 0; k < n; k++) ents.push({ type: 'pearl', x: clamp(cx + Math.sin(ph + k * 0.7) * amp, 20, W - 20), y: y0 + k * 26, vx: 0 });
-    } else if (r < 0.78) {
-      const cnt = 1 + (Math.random() < 0.3 + d * 0.5 ? 1 : 0);
-      for (let k = 0; k < cnt; k++) ents.push({ type: 'rock', x: rand(20, W - 20), y: y0 + k * 70, r: rand(14, 30), seed: rand(0, 10), vx: rand(-12, 12), rot: 0, spin: rand(-0.6, 0.6) });
-      if (Math.random() < 0.5) {
-        const cx = rand(40, W - 40);
-        for (let k = 0; k < 3; k++) ents.push({ type: 'pearl', x: cx, y: y0 + 120 + k * 26, vx: 0 });
-      }
-    } else if (S.depthShown > 400) {
-      const dir = Math.random() < 0.5 ? 1 : -1;
-      ents.push({ type: 'angler', x: dir > 0 ? -40 : W + 40, y: rand(H * 0.45, H * 0.9), vx: dir * rand(45, 70 + d * 60), dir, ph: rand(0, 6) });
+  function spawnCritter() {
+    const z = zoneIndex(S.depthShown);
+    const pool = CREATURES.filter((c) => c.zone === z);
+    const fresh = pool.filter((c) => !S.photosThisDive.has(c.id) && !critters.some((k) => k.c === c));
+    const c = (fresh.length ? fresh : pool)[Math.floor(Math.random() * (fresh.length || pool.length))];
+    if (!c) return;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const k = { c, dir, ph: rand(0, 6), snapped: false, vx: 0, vy: 0 };
+    if (c.kind === 'jelly' || c.kind === 'squid' || c.kind === 'dumbo') {
+      k.x = rand(W * 0.2, W * 0.8); k.y = H + 40; k.vx = rand(-12, 12); k.vy = -rand(10, 22);
     } else {
-      ents.push({ type: 'rock', x: rand(20, W - 20), y: y0, r: rand(16, 26), seed: rand(0, 10), vx: 0, rot: 0, spin: rand(-0.6, 0.6) });
+      k.x = dir > 0 ? rand(-40, W * 0.25) : rand(W * 0.75, W + 40);
+      k.y = H + 50; k.vx = dir * rand(35, 60); k.vy = 0;
     }
-    if (S.hp < S.maxHp && Math.random() < 0.07) ents.push({ type: 'kit', x: rand(40, W - 40), y: y0 + 60, vx: 0 });
+    if (c.kind === 'whale') { k.x = dir > 0 ? -80 : W + 80; k.y = H * 0.75; k.vx = dir * 70; }
+    critters.push(k);
   }
 
-  /* ---------- Rock shelves ---------- */
+  /* ---------- Question shelves ---------- */
   function startShelf() {
     if (!S.queue.length) { touchdown(); return; }
     const card = S.queue.shift();
     S.qNum++;
-    let hatch = S.hatches && S.qNum % 7 === 0 && norm(card.a).length <= 28;
+    let hatch = S.hatches && S.qNum % 6 === 0 && norm(card.a).length <= 28;
     let options = [card.a], correctIdx = 0;
     if (!hatch) {
       ({ options, correctIdx } = buildOptions(card));
       if (options.length < 2) { hatch = true; options = [card.a]; correctIdx = 0; }
     }
     const n = options.length;
-    const T = (PACE[S.pace] + Math.min(8, card.q.length * 0.035) + (hatch ? PACE[S.pace] * 0.6 : options.join('').length * 0.02)) * timeScale();
+    const T = PACE[S.pace] + Math.min(8, card.q.length * 0.035) + (hatch ? PACE[S.pace] * 0.6 : options.join('').length * 0.02);
     S.ev = { type: 'shelf', card, options, correctIdx, n, hatch, T, t: 0, sp: 0, phase: 'approach', closed: new Set(), passT: 0, recoil: 0, hatchOpen: 0, opening: false, chosen: -1, seed: rand(0, 100), crashT: 0 };
     S.autoX = null;
-    setQuestion(card.q, `Shelf ${S.qNum} · ${S.mastered}/${S.total} cleared`);
+    setQuestion(card.q, `Question ${S.qNum} · ${S.mastered}/${S.total} answered`);
     $('hatchForm').hidden = !hatch;
     if (hatch) {
       makeLabels([{ text: 'Sealed hatch', cls: 'hatch' }]);
@@ -723,232 +674,118 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
   function impactShelf() {
     const ev = S.ev;
     const right = ev.hatch ? matches(ev.typed || '', ev.card.a) : ev.chosen === ev.correctIdx;
+    S.attempts++;
     if (right) {
-      scoreRight(ev, 100 + Math.round(60 * Math.max(0, 1 - ev.t / ev.T)) + (ev.hatch ? 50 : 0));
+      const pts = Math.round((100 + Math.round(60 * Math.max(0, 1 - ev.t / ev.T))) * mult());
+      S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++;
+      S.depthTarget = depthFor(S.mastered, S.total);
+      let msg = `+${pts}`;
+      if (S.streak >= 3) msg += ` · ${S.streak} in a row`;
+      if (S.streak % 3 === 0 && S.sonar < 5) { S.sonar++; msg += ' · +1 hint'; }
+      toast(msg);
       if (ev.hatch) ev.opening = true;
       ev.phase = 'pass'; ev.passT = 0;
+      sfx.right();
       burstBubbles();
     } else {
-      scoreWrong(ev.card, 2);
-      ev.phase = S.hp <= 0 ? 'breached' : 'crashed';
-      ev.crashT = 0;
-      showCrash(ev);
+      S.streak = 0;
+      S.missed.set(ev.card.id, (S.missed.get(ev.card.id) || 0) + 1);
+      S.queue.splice(Math.min(S.queue.length, 2 + Math.floor(Math.random() * 2)), 0, ev.card);
+      shake = RM ? 0 : 6;
+      sfx.bonk();
+      ev.phase = 'crashed'; ev.crashT = 0;
+      $('crashAns').textContent = ev.card.a;
+      $('crash').hidden = false;
     }
     updateTagClasses();
+    renderHud(true);
   }
   function continueDive() {
     const ev = S.ev;
-    if (!ev || ev.type !== 'shelf') return;
-    if (ev.phase === 'breached') { endGame(false); return; }
-    if (ev.phase !== 'crashed') return;
+    if (!ev || ev.type !== 'shelf' || ev.phase !== 'crashed') return;
     $('crash').hidden = true;
     ev.phase = 'recover';
     S.autoX = ev.hatch ? W / 2 : laneX(ev.correctIdx, ev.n);
     if (ev.hatch) ev.opening = true;
   }
-
-  /* ---------- Sea monsters ---------- */
-  function startBoss() {
-    const def = BOSSES[Math.min(S.bossesDone, BOSSES.length - 1)];
-    S.bossesDone++;
-    const hp = Math.min(3 + (S.bossesDone >= 3 ? 1 : 0), S.queue.length);
-    if (hp < 2) { startShelf(); return; }
-    S.ev = { type: 'boss', def, hp, maxHp: hp, x: W / 2, rise: 340, state: 'enter', t: 0, v: null, hit: 0, lash: 0, inkT: 2.5, gap: 0 };
-    clearLabels();
-    $('bossName').textContent = def.name;
-    $('bossFill').style.transform = 'scaleX(1)';
-    $('bossBar').hidden = false;
-    setIdle(`A ${def.name.replace(/^The /, '').toLowerCase()} rises from the dark. Swim into the right answer to fire a flare. ${hp} hits will drive it off.`, true);
-    $('rCount').textContent = `${hp} flares to land`;
-    sfx.roar();
-    shake = RM ? 0 : 10;
-  }
-  function startVolley() {
-    const ev = S.ev;
-    if (!S.queue.length) { ev.state = 'dying'; ev.t = 0; return; }
-    const card = S.queue.shift();
-    S.qNum++;
-    const { options, correctIdx } = buildOptions(card);
-    const n = options.length;
-    const T = (PACE[S.pace] * 0.95 + Math.min(8, card.q.length * 0.035) + options.join('').length * 0.02) * timeScale();
-    ev.v = { card, options, correctIdx, n, T, t: 0, closed: new Set(), done: false, picked: -1, orbs: options.map((_, i) => ({ i, ph: rand(0, 6), x: laneX(i, n), y: H + 40 })) };
-    ev.state = 'volley';
-    S.autoX = null; S.autoOrb = null;
-    setQuestion(card.q, `${ev.def.name} · ${ev.hp} ${ev.hp === 1 ? 'hit' : 'hits'} left`);
-    makeLabels(options.map((o, i) => ({ text: o, key: i + 1, cls: 'orb', onClick: () => { if (ev.v && !ev.v.done && !ev.v.closed.has(i)) S.autoOrb = i; } })));
-    sfx.ping();
-  }
-  function hitOrb(i) {
-    const ev = S.ev, v = ev.v;
-    if (!v || v.done) return;
-    v.done = true; v.picked = i; S.autoOrb = null;
-    updateTagClasses();
-    if (i === v.correctIdx) {
-      scoreRight(ev, 150);
-      flares.push({ x0: S.x, y0: subY(), t: 0 });
-      sfx.flare();
-      ev.state = 'between'; ev.gap = 1.1;
-    } else {
-      scoreWrong(v.card, 2);
-      ev.lash = 1;
-      showBanner(i < 0 ? 'Missed every answer' : 'Lashed by a tentacle', v.card.a);
-      if (S.hp <= 0) { breach(); return; }
-      ev.state = 'between'; ev.gap = 2.6;
-    }
-    setTimeout(() => { if (S.ev === ev) clearLabels(); }, 700);
-  }
-  function flareHit() {
-    const ev = S.ev;
-    if (!ev || ev.type !== 'boss') return;
-    ev.hp--; ev.hit = 1;
-    $('bossFill').style.transform = `scaleX(${ev.hp / ev.maxHp})`;
-    const hx = ev.x, hy = bossY(ev);
-    for (let k = 0; k < (RM ? 0 : 40); k++) { const a = rand(0, Math.PI * 2), sp = rand(60, 260); bits.push({ x: hx, y: hy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: rand(0.5, 1), c: '255,190,90' }); }
-    shake = RM ? 0 : 8;
-    sfx.boom();
-    if (ev.hp <= 0) { ev.state = 'dying'; ev.t = 0; toast('Monster driven off · +15 pearls', true); }
-  }
-  function finishBoss() {
-    S.bossKills++; S.pearls += 15; S.pearlsTotal += 15; S.score += 500;
-    if (S.queue.length) openRefit(); else touchdown();
-  }
-
-  /* ---------- Refit ---------- */
-  function openRefit() {
-    S.mode = 'refit';
-    keys.clear(); pointer.active = false;
-    clearLabels();
-    $('bossBar').hidden = true;
-    const avail = UPGRADES.filter((u) => (S.bought[u.id] || 0) < u.max && (!u.ok || u.ok()));
-    const offer = shuffle(avail).slice(0, 3);
-    const shop = $('shop');
-    shop.replaceChildren();
-    const sync = () => {
-      $('refitPearls').textContent = `${S.pearls} pearls`;
-      [...shop.children].forEach((b) => { if (!b.classList.contains('bought')) b.disabled = S.pearls < +b.dataset.cost; });
-    };
-    for (const u of offer) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'card'; b.dataset.cost = u.cost;
-      const name = document.createElement('span'); name.className = 'name'; name.textContent = u.name;
-      const desc = document.createElement('span'); desc.className = 'desc'; desc.textContent = u.desc;
-      const cost = document.createElement('span'); cost.className = 'cost'; cost.textContent = `${u.cost} pearls`;
-      b.append(name, desc, cost);
-      b.addEventListener('click', () => {
-        if (S.pearls < u.cost || b.classList.contains('bought')) return;
-        S.pearls -= u.cost; S.bought[u.id] = (S.bought[u.id] || 0) + 1; u.apply();
-        b.classList.add('bought'); b.disabled = true; cost.textContent = 'Installed';
-        sfx.buy(); sync(); renderHud(true);
-      });
-      shop.append(b);
-    }
-    $('refitEyebrow').textContent = `${S.ev.def.name} driven off`;
-    sync();
-    $('refit').hidden = false;
-    $('btnRefitGo').focus();
-  }
-
-  /* ---------- Scoring ---------- */
-  function scoreRight(ev, base) {
-    const pts = Math.round(base * mult());
-    S.attempts++; S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++;
-    S.pearls += 3; S.pearlsTotal += 3;
-    S.depthTarget = depthFor(S.mastered, S.total); S.maxDepth = S.depthTarget;
-    let msg = `+${pts}`;
-    const od = S.streak % 5 === 0;
-    if (od) { S.overdrive = 8; msg = 'Overdrive! Smash rocks, double points'; sfx.overdrive(); }
-    else if (S.streak >= 3) msg += ` · streak ×${1 + Math.floor(S.streak / 3) * 0.5}`;
-    if (S.streak % 4 === 0 && S.sonar < 5) { S.sonar++; msg += ' · +1 sonar'; }
-    toast(msg, od);
-    floater(S.x, subY() - 34, `+${pts}`, '255,181,71');
-    if (S.bossesDone < S.bossesAt.length && S.depthTarget >= S.bossesAt[S.bossesDone] && S.queue.length >= 2 && ev.type !== 'boss') S.pendingBoss = true;
-    sfx.right();
-    renderHud(true);
-  }
-  function scoreWrong(card, dmg) {
-    S.attempts++; S.streak = 0; S.overdrive = 0;
-    S.hp = Math.max(0, S.hp - dmg);
-    S.missed.set(card.id, (S.missed.get(card.id) || 0) + 1);
-    S.queue.splice(Math.min(S.queue.length, 2 + Math.floor(Math.random() * 2)), 0, card);
-    shake = RM ? 0 : 14; flash = 0.5;
-    sparks(S.x, subY() + 20);
-    sfx.crash();
-    hullHit();
-    renderHud(true);
-  }
-  function hurt(dmg) {
-    if (S.invuln > 0 || S.overdrive > 0) return;
-    S.hp = Math.max(0, S.hp - dmg); S.invuln = 1.4;
-    shake = RM ? 0 : 9; flash = 0.35;
-    sparks(S.x, subY());
-    sfx.bump(); hullHit();
-    renderHud(true);
-    if (S.hp <= 0) breach();
-  }
-  function breach() {
-    clearLabels();
-    $('crash').hidden = true; $('hatchForm').hidden = true;
-    S.ev = { type: 'sunk', t: 0, boss: S.ev && S.ev.type === 'boss' ? S.ev : null };
-    setIdle('Hull breached. The sea floods in…', true);
-    for (let k = 0; k < 30; k++) bubbles.push({ x: S.x + rand(-30, 30), y: subY() + rand(-10, 20), r: rand(2, 6), vy: rand(80, 200), vx: rand(-30, 30), life: 2 });
+  function nextAfterAnswer() {
+    if (!S.queue.length) { touchdown(); return; }
+    startCruise('normal');
   }
   function touchdown() {
     clearLabels();
-    $('bossBar').hidden = true;
     S.ev = { type: 'floor', t: 0 };
     S.depthTarget = MAX_DEPTH;
-    setIdle('Touchdown. The floor of Challenger Deep, 10,935 m.');
-    toast('Touchdown at Challenger Deep', true);
+    setIdle('Touchdown. You are resting on the floor of Challenger Deep, 10,935 m down.');
+    toast('Touchdown at Challenger Deep');
     sfx.win();
   }
 
   function useSonar() {
     const ev = S.ev;
-    if (S.mode !== 'play' || !ev || S.sonar < 1) return;
-    let target = null;
-    if (ev.type === 'shelf' && ev.phase === 'approach' && !ev.hatch) target = ev;
-    if (ev.type === 'boss' && ev.state === 'volley' && ev.v && !ev.v.done) target = ev.v;
-    if (!target || target.n < 3 || target.closed.size) return;
-    const wrong = shuffle([...Array(target.n).keys()].filter((i) => i !== target.correctIdx));
-    wrong.slice(0, target.n - 2).forEach((i) => target.closed.add(i));
-    if (S.autoOrb != null && target.closed.has(S.autoOrb)) S.autoOrb = null;
+    if (S.mode !== 'play' || !ev || S.sonar < 1 || ev.type !== 'shelf' || ev.phase !== 'approach' || ev.hatch) return;
+    if (ev.n < 3 || ev.closed.size) return;
+    const wrong = shuffle([...Array(ev.n).keys()].filter((i) => i !== ev.correctIdx));
+    wrong.slice(0, ev.n - 2).forEach((i) => ev.closed.add(i));
     S.sonar--;
     sfx.sonar();
     updateTagClasses();
     renderHud(true);
   }
 
-  function endGame(won) {
+  /* ---------- Photographs ---------- */
+  function photograph(k) {
+    k.snapped = true;
+    camFlash = RM ? 0 : 0.6;
+    sfx.shutter();
+    const first = !S.seen.has(k.c.id);
+    const firstThisDive = !S.photosThisDive.has(k.c.id);
+    S.photosThisDive.add(k.c.id);
+    if (first) { S.seen.add(k.c.id); S.newThisDive.add(k.c.id); store.set('logbook', [...S.seen]); }
+    if (firstThisDive) S.score += first ? 100 : 25;
+    $('factTitle').textContent = first ? 'New in your logbook' : 'Photographed again';
+    $('factName').textContent = k.c.name;
+    $('factText').textContent = k.c.fact;
+    $('fact').hidden = false;
+    clearTimeout(factTimer);
+    factTimer = setTimeout(() => { $('fact').hidden = true; }, 5000);
+    renderHud(true);
+  }
+
+  function endGame() {
     S.mode = 'end';
     clearLabels();
-    ['crash', 'hatchForm', 'bossBar', 'banner'].forEach((id) => { $(id).hidden = true; });
-    const depth = won ? MAX_DEPTH : S.maxDepth;
-    $('endEyebrow').textContent = won ? 'Touchdown' : 'Hull breached';
-    $('endTitle').textContent = won ? 'You reached Challenger Deep' : `Lost at ${fmt(depth)} m`;
+    ['crash', 'hatchForm', 'fact'].forEach((id) => { $(id).hidden = true; });
     const wrongTurns = S.attempts - S.correct;
-    $('endSub').textContent = won
-      ? `All ${S.total} questions on “${S.topic}” cleared, with ${wrongTurns} wrong ${wrongTurns === 1 ? 'answer' : 'answers'} on the way down.`
-      : `${S.mastered} of ${S.total} questions cleared before the hull gave out in the ${zoneOf(depth).toLowerCase()}.`;
-    $('sDepth').textContent = fmt(depth) + ' m';
+    $('endSub').textContent = `All ${S.total} questions on “${S.topic}” answered` + (wrongTurns ? `, with ${wrongTurns} ${wrongTurns === 1 ? 'retry' : 'retries'} along the way.` : ' without a single miss.');
     $('sAcc').textContent = (S.attempts ? Math.round((S.correct / S.attempts) * 100) : 0) + '%';
     $('sStreak').textContent = S.best;
-    $('sPearls').textContent = S.pearlsTotal;
-    $('sBoss').textContent = S.bossKills;
+    $('sPhotos').textContent = S.photosThisDive.size;
     $('sScore').textContent = fmt(S.score);
 
     const key = 'best:' + norm(S.topic);
     const prev = store.get(key, null);
-    const rank = (x) => (x.won ? 1e9 : 0) + x.depth * 100 + x.score / 1000;
-    const now = { won, depth, score: S.score };
-    if (!prev || rank(now) > rank(prev)) { store.set(key, now); $('sRecord').textContent = prev ? 'New personal record for this topic.' : 'First logged dive for this topic.'; }
-    else $('sRecord').textContent = `Personal record: ${prev.won ? 'Challenger Deep' : fmt(prev.depth) + ' m'}, ${fmt(prev.score)} points.`;
+    if (!prev || S.score > prev.score) { store.set(key, { score: S.score }); $('sRecord').textContent = prev ? 'New best score for this topic.' : ''; }
+    else $('sRecord').textContent = `Your best for this topic: ${fmt(prev.score)} points.`;
+
+    $('bookTitle').textContent = `Logbook · ${S.seen.size} of ${CREATURES.length} species`;
+    const book = $('book');
+    book.replaceChildren();
+    for (const c of CREATURES) {
+      const e = document.createElement('div');
+      const known = S.seen.has(c.id), isNew = S.newThisDive.has(c.id);
+      e.className = 'entry' + (known ? '' : ' locked') + (isNew ? ' new' : '');
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = known ? c.name : 'Not yet seen';
+      const z = document.createElement('span'); z.className = 'z'; z.textContent = isNew ? 'New this dive' : ZONES[c.zone][1];
+      e.append(n, z); book.append(e);
+    }
 
     const log = $('log');
     log.replaceChildren();
     const missed = [...S.missed.entries()].sort((a, b) => b[1] - a[1]);
     if (!missed.length) {
       const li = document.createElement('li'); li.className = 'clean';
-      li.textContent = 'Clean dive. No wrong answers.';
+      li.textContent = 'Nothing to review. You got every question first time.';
       log.append(li);
     }
     for (const [id, count] of missed) {
@@ -970,9 +807,9 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     q.textContent = text; q.className = 'question';
     $('rCount').textContent = count;
   }
-  function setIdle(text, alarm) {
+  function setIdle(text) {
     const q = $('rQuestion');
-    q.textContent = text; q.className = 'question idle' + (alarm ? ' alarm' : '');
+    q.textContent = text; q.className = 'question idle';
     $('clockFill').style.transform = 'scaleX(0)';
   }
   function clearLabels() { $('labels').replaceChildren(); }
@@ -990,26 +827,16 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     updateTagClasses();
   }
   function updateTagClasses() {
-    const ev = S.ev, kids = [...$('labels').children];
-    if (!ev) return;
-    if (ev.type === 'shelf' && !ev.hatch) {
-      const resolved = ['pass', 'crashed', 'breached', 'recover'].includes(ev.phase);
-      const aim = ev.phase === 'surge' ? ev.chosen : laneUnderSub(ev);
-      kids.forEach((el, i) => {
-        el.classList.toggle('aim', i === aim && !resolved);
-        el.classList.toggle('sealed', ev.closed.has(i));
-        el.classList.toggle('right', resolved && i === ev.correctIdx);
-        el.classList.toggle('wrong', resolved && i === ev.chosen && i !== ev.correctIdx);
-      });
-    } else if (ev.type === 'boss' && ev.v) {
-      const v = ev.v;
-      kids.forEach((el, i) => {
-        el.classList.toggle('aim', !v.done && S.autoOrb === i);
-        el.classList.toggle('sealed', v.closed.has(i));
-        el.classList.toggle('right', v.done && i === v.correctIdx);
-        el.classList.toggle('wrong', v.done && i === v.picked && i !== v.correctIdx);
-      });
-    }
+    const ev = S.ev;
+    if (!ev || ev.type !== 'shelf' || ev.hatch) return;
+    const resolved = ['pass', 'crashed', 'recover'].includes(ev.phase);
+    const aim = ev.phase === 'surge' ? ev.chosen : laneUnderSub(ev);
+    [...$('labels').children].forEach((el, i) => {
+      el.classList.toggle('aim', i === aim && !resolved);
+      el.classList.toggle('sealed', ev.closed.has(i));
+      el.classList.toggle('right', resolved && i === ev.correctIdx);
+      el.classList.toggle('wrong', resolved && i === ev.chosen && i !== ev.correctIdx);
+    });
   }
   function place(el, x, y, w, alpha) {
     el.style.width = w + 'px';
@@ -1019,55 +846,25 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
   let hudKey = '';
   function renderHud(force) {
     const d = S.depthShown;
-    const key = [Math.round(d), S.hp, S.maxHp, S.streak, S.score, S.sonar, S.pearls, S.mode, S.overdrive > 0].join('|');
+    const key = [Math.round(d), S.streak, S.score, S.sonar, S.seen.size, S.mode].join('|');
     if (!force && key === hudKey) return;
     hudKey = key;
     $('gDepth').textContent = fmt(d) + ' m';
     $('gPress').textContent = fmt(1 + d / 10.06) + ' atm';
-    const hull = $('gHull'), pips = S.maxHp / 2;
-    while (hull.children.length < pips) hull.append(document.createElement('i'));
-    while (hull.children.length > pips) hull.lastChild.remove();
-    [...hull.children].forEach((el, i) => {
-      el.classList.toggle('off', S.hp <= i * 2);
-      el.classList.toggle('half', S.hp === i * 2 + 1);
-    });
-    $('gStreak').textContent = S.overdrive > 0 ? `${S.streak} · OD` : S.streak >= 3 ? `${S.streak} · ×${1 + Math.floor(S.streak / 3) * 0.5}` : S.streak;
-    $('gStreak').style.color = S.overdrive > 0 ? 'var(--lume)' : '';
+    $('gStreak').textContent = S.streak >= 3 ? `${S.streak} · ×${mult()}` : S.streak;
     $('gScore').textContent = fmt(S.score);
-    $('gPearls').textContent = S.pearls;
+    $('gLog').textContent = `${S.seen.size}/${CREATURES.length}`;
     $('sonarCount').textContent = S.sonar;
     $('btnSonar').disabled = S.mode !== 'play' || S.sonar < 1;
     $('btnPause').disabled = S.mode !== 'play' && S.mode !== 'paused';
     $('rZone').textContent = zoneOf(d);
   }
-  function hullHit() {
-    const h = $('gHull');
-    h.classList.remove('hit'); void h.offsetWidth; h.classList.add('hit');
-  }
-  function showCrash(ev) {
-    const breached = ev.phase === 'breached';
-    $('crashTitle').textContent = breached ? 'Hull breached' : `Impact · hull ${Math.ceil(S.hp / 2)} of ${S.maxHp / 2}`;
-    $('crashAns').textContent = ev.card.a;
-    $('crashNote').textContent = breached ? 'The dive is over. Your log is waiting.' : 'This question will come around again before you reach the bottom.';
-    $('btnContinue').textContent = breached ? 'Read the dive log' : 'Continue';
-    $('crash').hidden = false;
-  }
-  function showBanner(title, ans) {
-    $('bannerTitle').textContent = title;
-    $('bannerAns').textContent = ans;
-    $('banner').hidden = false;
-    clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(() => { $('banner').hidden = true; }, 2600);
-  }
-  function toast(msg, hot) {
+  function toast(msg) {
     const t = $('toast');
     t.textContent = msg; t.hidden = false;
-    t.classList.toggle('hot', !!hot);
-    t.classList.toggle('low', !$('bossBar').hidden);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
   }
-  function floater(x, y, text, rgbStr) { floaters.push({ x, y, text, rgb: rgbStr, t: 0 }); }
 
   /* ================= Sound ================= */
   let AC = null;
@@ -1096,20 +893,11 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     src.buffer = buf; src.connect(lp).connect(g).connect(ac.destination); src.start();
   }
   const sfx = {
-    ping() { tone(1250, 0.45, { gain: 0.04, to: 1180 }); tone(1250, 0.5, { gain: 0.015, to: 1180, delay: 0.38 }); },
-    right() { tone(523, 0.16, { type: 'triangle', gain: 0.06 }); tone(784, 0.32, { type: 'triangle', gain: 0.06, delay: 0.09 }); },
-    crash() { noise(0.5, 380, 0.5); tone(140, 0.4, { type: 'sawtooth', gain: 0.04, to: 60 }); },
-    bump() { noise(0.3, 600, 0.35); },
-    pearl(n) { tone(880 * Math.pow(1.06, Math.min(n, 14)), 0.12, { gain: 0.035 }); },
-    kit() { tone(440, 0.1, { type: 'square', gain: 0.03 }); tone(660, 0.18, { type: 'square', gain: 0.03, delay: 0.08 }); },
-    sonar() { tone(900, 0.9, { gain: 0.05, to: 1500 }); },
-    warn() { tone(220, 0.6, { type: 'sawtooth', gain: 0.03 }); tone(220, 0.6, { type: 'sawtooth', gain: 0.03, delay: 0.8 }); },
-    roar() { tone(70, 1.4, { type: 'sawtooth', gain: 0.07, to: 45 }); noise(1.2, 200, 0.3); },
-    flare() { tone(300, 0.4, { type: 'sawtooth', gain: 0.03, to: 1200 }); },
-    boom() { noise(0.7, 900, 0.5); tone(90, 0.5, { gain: 0.08, to: 40 }); },
-    smash() { noise(0.25, 1400, 0.25); },
-    overdrive() { [392, 523, 659, 784].forEach((f, i) => tone(f, 0.2, { type: 'square', gain: 0.025, delay: i * 0.06 })); },
-    buy() { tone(660, 0.1, { type: 'triangle', gain: 0.05 }); tone(990, 0.2, { type: 'triangle', gain: 0.05, delay: 0.07 }); },
+    ping() { tone(1250, 0.45, { gain: 0.035, to: 1180 }); tone(1250, 0.5, { gain: 0.012, to: 1180, delay: 0.38 }); },
+    right() { tone(523, 0.16, { type: 'triangle', gain: 0.05 }); tone(784, 0.32, { type: 'triangle', gain: 0.05, delay: 0.09 }); },
+    bonk() { noise(0.3, 300, 0.3); tone(180, 0.25, { type: 'triangle', gain: 0.04, to: 120 }); },
+    shutter() { noise(0.06, 5000, 0.12); tone(1600, 0.08, { type: 'square', gain: 0.015, delay: 0.05 }); },
+    sonar() { tone(900, 0.9, { gain: 0.04, to: 1500 }); },
     win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.5, { type: 'triangle', gain: 0.05, delay: i * 0.12 })); },
   };
 
@@ -1124,7 +912,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const count = Math.min(140, Math.round((W * H) / (RM ? 18000 : 8000)));
     snow = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.5 + Math.random() * 1.6, v: 0.4 + Math.random() }));
-    S.x = clamp(S.x || W / 2, 18, W - 18);
+    S.x = clamp(S.x || W / 2, 30, W - 30);
   }
   new ResizeObserver(resize).observe($('stage'));
 
@@ -1133,7 +921,6 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
   const band = () => Math.max(38, Math.min(56, H * 0.1));
   const impactY = () => subY() + 22 + band() / 2;
   const laneX = (i, n) => (i + 0.5) * (W / n);
-  const bossY = (ev) => H * 0.8 + Math.sin(time * 1.1) * 8 + ev.rise;
   function wallY(ev) {
     const start = H - Math.max(56, Math.min(110, H * 0.2));
     const end = impactY();
@@ -1156,168 +943,88 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
 
   function burstBubbles() {
     if (RM) return;
-    for (let i = 0; i < 26; i++) bubbles.push({ x: S.x + rand(-20, 20), y: subY() + rand(-10, 10), r: rand(1.5, 5), vy: rand(60, 180), vx: rand(-15, 15), life: 1.4 });
-  }
-  function sparks(x, y) {
-    if (RM) return;
-    for (let i = 0; i < 28; i++) { const a = rand(-Math.PI, 0), sp = rand(60, 280); bits.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.6, life: rand(0.6, 1.1), c: '255,170,80', g: 1 }); }
+    for (let i = 0; i < 22; i++) bubbles.push({ x: S.x + rand(-20, 20), y: subY() + rand(-10, 10), r: rand(1.5, 5), vy: rand(60, 160), vx: rand(-15, 15), life: 1.4 });
   }
 
   /* ---------- Update ---------- */
   function update(dt) {
     time += dt;
     const ev = S.ev;
-    const playing = S.mode === 'play' && ev;
-    const d = S.depthShown / MAX_DEPTH;
-    let scrollTarget = 30;
+    const live = S.mode === 'play' && ev;
+    let scrollTarget = 20;
 
-    if (playing) {
-      S.invuln = Math.max(0, S.invuln - dt);
-      S.overdrive = Math.max(0, S.overdrive - dt);
+    if (live) {
       if (ev.type === 'cruise') {
-        ev.t += dt; ev.spawnT -= dt;
-        scrollTarget = 115 + d * 90 + (S.overdrive > 0 ? 50 : 0);
-        if (ev.spawnT <= 0 && ev.t < ev.len - 1.3) { spawnPattern(); ev.spawnT = Math.max(0.5, 0.95 - d * 0.35); }
-        if (ev.t >= ev.len) afterCruise();
+        ev.t += dt;
+        scrollTarget = 70;
+        if (ev.spawned === 0 && ev.t > 1.8 && Math.random() < 0.5) { ev.spawned = 1; spawnCritter(); }
+        if (ev.t > 1.8) ev.spawned = 1;
+        if (ev.t >= ev.len) startShelf();
       } else if (ev.type === 'shelf') {
-        scrollTarget = ev.phase === 'pass' ? 520 : ev.phase === 'crashed' || ev.phase === 'breached' ? 0 : 40;
+        scrollTarget = ev.phase === 'pass' ? 380 : ev.phase === 'crashed' ? 0 : 25;
         if (ev.phase === 'approach') {
           ev.t += dt;
           if (ev.t >= ev.T) { if (ev.hatch) submitHatch(); else chooseLane(laneUnderSub(ev)); }
           $('clockFill').style.transform = `scaleX(${Math.max(0, 1 - ev.t / ev.T)})`;
           updateTagClasses();
         } else if (ev.phase === 'surge') {
-          ev.sp = Math.min(1, ev.sp + dt * 3.4);
+          ev.sp = Math.min(1, ev.sp + dt * 3);
           if (ev.sp >= 1) impactShelf();
         } else if (ev.phase === 'pass') {
           ev.passT += dt;
-          if (ev.passT >= 0.9) nextAfterAnswer();
-        } else if (ev.phase === 'crashed' || ev.phase === 'breached') {
-          ev.recoil += (34 - ev.recoil) * Math.min(1, dt * 8);
+          if (ev.passT >= 1) nextAfterAnswer();
+        } else if (ev.phase === 'crashed') {
+          ev.recoil += (26 - ev.recoil) * Math.min(1, dt * 8);
           ev.crashT += dt;
-          const lim = ev.phase === 'crashed' ? 3.6 : 3;
-          $('crashTimer').style.transform = `scaleX(${Math.max(0, 1 - ev.crashT / lim)})`;
-          if (ev.crashT >= lim) continueDive();
+          $('crashTimer').style.transform = `scaleX(${Math.max(0, 1 - ev.crashT / 4)})`;
+          if (ev.crashT >= 4) continueDive();
         } else if (ev.phase === 'recover') {
           const tx = ev.hatch ? W / 2 : laneX(ev.correctIdx, ev.n);
           ev.recoil += (0 - ev.recoil) * Math.min(1, dt * 5);
           if (Math.abs(S.x - tx) < 4 && ev.recoil < 2 && (!ev.hatch || ev.hatchOpen > 0.95)) { ev.phase = 'pass'; ev.passT = 0; burstBubbles(); }
         }
         if (ev.opening) ev.hatchOpen = Math.min(1, ev.hatchOpen + dt * 5);
-      } else if (ev.type === 'boss') {
-        scrollTarget = 35;
-        ev.x = W / 2 + Math.sin(time * 0.5) * W * 0.22;
-        ev.hit = Math.max(0, ev.hit - dt * 3);
-        ev.lash = Math.max(0, ev.lash - dt * 1.6);
-        if (ev.state === 'enter') { ev.rise = Math.max(0, ev.rise - dt * 240); if (ev.rise <= 0) startVolley(); }
-        else if (ev.state === 'volley') {
-          const v = ev.v;
-          v.t += dt;
-          $('clockFill').style.transform = `scaleX(${Math.max(0, 1 - v.t / v.T)})`;
-          const startY = H + 30, endY = subY() - 70, lw = W / v.n, sy = subY();
-          for (const o of v.orbs) {
-            o.y = startY + (endY - startY) * Math.min(1, v.t / v.T);
-            o.x = laneX(o.i, v.n) + Math.sin(time * 0.9 + o.ph) * lw * 0.2;
-          }
-          if (S.autoOrb != null) S.autoX = v.orbs[S.autoOrb].x;
-          for (const o of v.orbs) {
-            if (!v.done && !v.closed.has(o.i) && Math.abs(o.x - S.x) < Math.min(60, lw * 0.4) && Math.abs(o.y - sy) < 26) hitOrb(o.i);
-          }
-          if (!v.done && v.t >= v.T) hitOrb(-1);
-          if (S.ev === ev && ev.state === 'volley') {
-            ev.inkT -= dt;
-            if (ev.inkT <= 0) {
-              const tx = clamp(S.x + rand(-60, 60), 20, W - 20);
-              ents.push({ type: 'ink', x: ev.x, y: bossY(ev) - 40, vx: (tx - ev.x) / 2.2, r: 11 });
-              ev.inkT = rand(2.2, 3.6) - d;
-            }
-            updateTagClasses();
-          }
-        } else if (ev.state === 'between') {
-          ev.gap -= dt;
-          if (ev.gap <= 0) { if (ev.hp <= 0) { ev.state = 'dying'; ev.t = 0; } else startVolley(); }
-        } else if (ev.state === 'dying') {
-          ev.t += dt; ev.rise += dt * 180;
-          if (ev.t >= 2.2) finishBoss();
-        }
-      } else if (ev.type === 'sunk') {
-        ev.t += dt; scrollTarget = 0;
-        if (ev.t >= 2.2) endGame(false);
       } else if (ev.type === 'floor') {
-        ev.t += dt; scrollTarget = Math.max(0, 60 - ev.t * 40);
-        if (ev.t >= 2.6) endGame(true);
+        ev.t += dt; scrollTarget = Math.max(0, 50 - ev.t * 30);
+        if (ev.t >= 3) endGame();
       }
     }
-    S.scroll += (scrollTarget - S.scroll) * Math.min(1, dt * 3);
+    S.scroll += (scrollTarget - S.scroll) * Math.min(1, dt * 2.5);
 
-    // steering
-    const cur = S.ev;
-    const live = S.mode === 'play' && cur;
-    const forced = live && cur.type === 'shelf' && ['surge', 'pass', 'recover'].includes(cur.phase);
-    const frozen = live && ((cur.type === 'shelf' && (cur.phase === 'crashed' || cur.phase === 'breached')) || cur.type === 'sunk');
-    const maxV = 360 * (1 + 0.25 * S.up.thrust);
+    // steering: gentle, eased movement
+    const forced = live && ev.type === 'shelf' && ['surge', 'pass', 'recover'].includes(ev.phase);
+    const frozen = live && ev.type === 'shelf' && ev.phase === 'crashed';
     const steerKeys = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
-    if (!forced && (steerKeys || pointer.active)) { S.autoX = null; S.autoOrb = null; }
+    if (!forced && (steerKeys || pointer.active)) S.autoX = null;
     const tgt = forced ? S.autoX : pointer.active ? pointer.x : S.autoX;
     let vx;
-    if (!live) vx = (W / 2 - S.x) * 2;
+    if (!live) vx = (W / 2 - S.x) * 1.5;
     else if (frozen) vx = 0;
-    else if (tgt != null) vx = clamp((tgt - S.x) * 9, -maxV * 1.4, maxV * 1.4);
-    else vx = steerKeys * maxV;
+    else if (tgt != null) vx = clamp((tgt - S.x) * 6, -420, 420);
+    else vx = steerKeys * 320;
     const edge = 38 * subScale();
     S.x = clamp(S.x + vx * dt, edge, W - edge);
 
-    S.depthShown += (S.depthTarget - S.depthShown) * Math.min(1, dt * 2.2);
-    shake = Math.max(0, shake - dt * 40);
-    flash = Math.max(0, flash - dt * 1.5);
-    pearlChainT -= dt; if (pearlChainT <= 0) pearlChain = 0;
+    S.depthShown += (S.depthTarget - S.depthShown) * Math.min(1, dt * 1.8);
+    shake = Math.max(0, shake - dt * 30);
+    camFlash = Math.max(0, camFlash - dt * 2.5);
 
-    // entities
-    const sy = subY(), sr = 24 * subScale();
-    const magR = S.overdrive > 0 ? 260 : 50 + S.up.magnet * 70;
-    const collide = live && S.ev.type !== 'sunk' && S.ev.type !== 'floor';
-    for (const e of ents) {
-      e.y -= S.scroll * dt; e.x += e.vx * dt;
-      if (e.type === 'rock') e.rot += e.spin * dt;
-      if (e.type === 'ink') e.y -= 90 * dt;
-      if (e.type === 'jelly' || !collide) continue;
-      const dx = S.x - e.x, dy = sy - e.y, dist = Math.hypot(dx, dy) || 1;
-      if (e.type === 'pearl' || e.type === 'kit') {
-        if (dist < magR) { e.x += (dx / dist) * 420 * dt; e.y += (dy / dist) * 420 * dt; }
-        if (dist < sr + 10) {
-          e.dead = true;
-          if (e.type === 'pearl') {
-            pearlChain++; pearlChainT = 1.2;
-            const gain = S.overdrive > 0 ? 2 : 1;
-            S.pearls += gain; S.pearlsTotal += gain; S.score += 10 * gain;
-            sfx.pearl(pearlChain);
-            if (pearlChain >= 5 && pearlChain % 5 === 0) floater(S.x, sy - 30, `${pearlChain} pearl chain`, '255,233,242');
-          } else {
-            S.hp = Math.min(S.maxHp, S.hp + 2); sfx.kit(); floater(S.x, sy - 30, 'Hull repaired', '111,227,207');
-          }
-        }
-      } else {
-        const r = e.type === 'angler' ? 16 : e.r;
-        if (dist < r + sr * 0.8) {
-          if (S.overdrive > 0 && e.type !== 'ink') {
-            e.dead = true; S.score += 25; sfx.smash();
-            for (let k = 0; k < 14; k++) bits.push({ x: e.x, y: e.y, vx: rand(-160, 160), vy: rand(-160, 60), life: rand(0.4, 0.8), c: '150,170,180', g: 1 });
-            floater(e.x, e.y - 20, '+25', '111,227,207');
-          } else if (S.invuln <= 0 && S.overdrive <= 0) {
-            if (e.type === 'ink') e.dead = true;
-            hurt(1);
-            if (S.ev.type === 'sunk') break;
-          }
-        }
-      }
+    // creatures drift past; glide near one to photograph it
+    const sy = subY();
+    for (const k of critters) {
+      k.x += k.vx * dt;
+      k.y += (k.vy - S.scroll * (k.c.kind === 'whale' ? 0.4 : 1)) * dt;
+      if (live && !k.snapped && Math.hypot(S.x - k.x, sy + 20 - k.y) < 80 + k.c.size) photograph(k);
     }
-    ents = ents.filter((e) => !e.dead && e.y > -80 && e.x > -140 && e.x < W + 140);
+    critters = critters.filter((k) => k.y > -120 && k.x > -200 && k.x < W + 200);
 
-    for (const f of flares) {
-      f.t += dt / 0.5;
-      if (f.t >= 1 && !f.done) { f.done = true; flareHit(); }
+    // ambient shoals in bright water, purely scenery
+    if (!RM && S.depthShown < 400 && shoals.length < 2 && Math.random() < dt * 0.25) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      shoals.push({ x: dir > 0 ? -60 : W + 60, y: H * rand(0.35, 0.9), dir, n: 5 + Math.floor(Math.random() * 5), v: rand(25, 45) });
     }
-    flares = flares.filter((f) => !f.done);
+    for (const f of shoals) { f.x += f.dir * f.v * dt; f.y -= S.scroll * 0.3 * dt; }
+    shoals = shoals.filter((f) => f.x > -140 && f.x < W + 140 && f.y > -40);
 
     for (const p of snow) {
       p.y -= (8 + S.scroll) * p.v * dt; p.x += Math.sin(time * 0.6 + p.y * 0.02) * 4 * dt;
@@ -1325,43 +1032,139 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     }
     for (const b of bubbles) { b.y -= b.vy * dt; b.x += b.vx * dt; b.life -= dt; }
     bubbles = bubbles.filter((b) => b.life > 0 && b.y > -10);
-    for (const s of bits) { s.x += s.vx * dt; s.y += s.vy * dt; if (s.g) s.vy += 260 * dt; s.life -= dt; }
-    bits = bits.filter((s) => s.life > 0);
-    for (const f of floaters) { f.t += dt; f.y -= 30 * dt; }
-    floaters = floaters.filter((f) => f.t < 1.1);
-
-    if (!RM && S.depthShown > 300 && ents.filter((e) => e.type === 'jelly').length < 2 && Math.random() < dt * 0.2) {
-      ents.push({ type: 'jelly', x: rand(40, W - 40), y: H + 40, vx: 0, s: rand(8, 18), ph: rand(0, 6), hue: Math.random() < 0.3 ? '255,140,200' : '111,227,207' });
-    }
   }
 
-  /* ---------- Draw ---------- */
-  function drawRock(e) {
-    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
-    const g = ctx.createRadialGradient(-e.r * 0.3, -e.r * 0.4, 1, 0, 0, e.r * 1.1);
-    g.addColorStop(0, '#5d6f77'); g.addColorStop(1, '#1b262d');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    for (let k = 0; k < 9; k++) {
-      const a = (k / 9) * Math.PI * 2, rr = e.r * (0.78 + 0.22 * Math.sin(e.seed * 3 + k * 2.3));
-      if (k) ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); else ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  /* ---------- Creature drawings (facing right; flipped by direction) ---------- */
+  function drawCritter(k) {
+    const c = k.c, s = c.size, t = time + k.ph;
+    ctx.save();
+    ctx.translate(k.x, k.y);
+    if (k.dir < 0 && !['jelly', 'squid', 'dumbo'].includes(c.kind)) ctx.scale(-1, 1);
+    const wag = Math.sin(t * 6) * 0.25;
+    const eye = (x, y, r) => { ctx.fillStyle = '#0b0f12'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(x + r * 0.3, y - r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill(); };
+    switch (c.kind) {
+      case 'fish': {
+        ctx.fillStyle = c.tail || c.body;
+        ctx.beginPath(); ctx.moveTo(-s * 0.8, 0); ctx.lineTo(-s * 1.5, -s * 0.55 + wag * s); ctx.lineTo(-s * 1.5, s * 0.55 + wag * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = c.body;
+        ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s * 0.3, -s * 0.45); ctx.quadraticCurveTo(0, -s * 0.95, s * 0.3, -s * 0.45); ctx.fill();
+        if (c.stripe) {
+          ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); ctx.clip();
+          ctx.fillStyle = c.stripe; ctx.fillRect(s * 0.3, -s, s * 0.22, s * 2); ctx.fillRect(-s * 0.35, -s, s * 0.26, s * 2);
+          ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1; ctx.strokeRect(s * 0.3, -s, s * 0.22, s * 2); ctx.strokeRect(-s * 0.35, -s, s * 0.26, s * 2);
+          ctx.restore();
+        }
+        if (c.dots) { ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-s * 0.6 + i * s * 0.3, s * 0.3, 1.6, 0, Math.PI * 2); ctx.fill(); } }
+        eye(s * 0.55, -s * 0.12, Math.max(1.8, s * 0.13));
+        break;
+      }
+      case 'hatchet': {
+        ctx.fillStyle = c.body;
+        ctx.beginPath(); ctx.moveTo(s, -s * 0.2); ctx.lineTo(-s * 0.6, -s * 0.5); ctx.lineTo(-s * 0.9, 0); ctx.lineTo(-s * 0.2, s * 0.9); ctx.lineTo(s * 0.6, s * 0.4); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 1.4, -s * 0.35 + wag * 4); ctx.lineTo(-s * 1.4, s * 0.35 + wag * 4); ctx.fill();
+        ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-s * 0.3 + i * s * 0.25, s * 0.55 - i * s * 0.08, 1.5, 0, Math.PI * 2); ctx.fill(); }
+        eye(s * 0.55, -s * 0.1, s * 0.2);
+        break;
+      }
+      case 'turtle': {
+        const fl = Math.sin(t * 2.5) * 0.5;
+        ctx.fillStyle = '#9cc27c';
+        [[s * 0.45, -s * 0.5, -0.6 + fl], [s * 0.45, s * 0.5, 0.6 - fl], [-s * 0.55, -s * 0.4, -2.4 - fl * 0.5], [-s * 0.55, s * 0.4, 2.4 + fl * 0.5]].forEach(([x, y, a], i) => {
+          ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(s * (i < 2 ? 0.45 : 0.25), 0, s * (i < 2 ? 0.5 : 0.28), s * 0.14, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        });
+        ctx.beginPath(); ctx.ellipse(s * 0.95, 0, s * 0.28, s * 0.22, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = c.body; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.85, s * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(40,60,30,.6)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(0, 0, s * 0.45, s * 0.3, 0, 0, Math.PI * 2); ctx.moveTo(-s * 0.85, 0); ctx.lineTo(-s * 0.45, 0); ctx.moveTo(s * 0.45, 0); ctx.lineTo(s * 0.85, 0); ctx.stroke();
+        eye(s * 1.08, -s * 0.07, 2);
+        break;
+      }
+      case 'whale': {
+        ctx.fillStyle = c.body;
+        ctx.beginPath(); ctx.moveTo(s * 1.1, -s * 0.35); ctx.quadraticCurveTo(s * 1.25, s * 0.2, s * 0.9, s * 0.35); ctx.lineTo(-s * 0.9, s * 0.18); ctx.quadraticCurveTo(-s * 1.3, 0, -s * 1.4, -s * 0.05); ctx.lineTo(-s * 0.8, -s * 0.3); ctx.quadraticCurveTo(0, -s * 0.5, s * 1.1, -s * 0.35); ctx.fill();
+        ctx.save(); ctx.translate(-s * 1.4, -s * 0.05); ctx.rotate(wag * 0.5);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-s * 0.2, -s * 0.35, -s * 0.4, -s * 0.3); ctx.quadraticCurveTo(-s * 0.2, 0, -s * 0.4, s * 0.3); ctx.quadraticCurveTo(-s * 0.2, s * 0.35, 0, 0); ctx.fill(); ctx.restore();
+        ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(s * 0.2, s * 0.32, s * 0.25, s * 0.06, 0.3, 0, Math.PI * 2); ctx.fill();
+        eye(s * 0.7, s * 0.05, 2.5);
+        break;
+      }
+      case 'angler': {
+        ctx.fillStyle = c.body;
+        ctx.beginPath(); ctx.ellipse(0, 0, s * 1.05, s * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 1.6, -s * 0.5 + wag * 5); ctx.lineTo(-s * 1.6, s * 0.5 + wag * 5); ctx.fill();
+        ctx.fillStyle = '#140d0a'; ctx.beginPath(); ctx.moveTo(s * 1.05, -s * 0.05); ctx.lineTo(s * 0.35, s * 0.15); ctx.lineTo(s * 0.95, s * 0.55); ctx.fill();
+        ctx.fillStyle = '#f2ede4'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(s * 0.5 + i * s * 0.14, s * 0.12); ctx.lineTo(s * 0.57 + i * s * 0.14, s * 0.32); ctx.lineTo(s * 0.64 + i * s * 0.14, s * 0.12); ctx.fill(); }
+        ctx.strokeStyle = c.body; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s * 0.3, -s * 0.7); ctx.quadraticCurveTo(s * 0.9, -s * 1.7, s * 1.5, -s * 1.1); ctx.stroke();
+        eye(s * 0.55, -s * 0.3, 2.2);
+        break;
+      }
+      case 'eel': {
+        ctx.strokeStyle = c.body; ctx.lineCap = 'round';
+        let px = 0, py = 0;
+        for (let i = 1; i <= 16; i++) {
+          const x = -i * s * 0.12, y = Math.sin(t * 3 - i * 0.5) * s * 0.12 * (i / 16) * 2;
+          ctx.lineWidth = Math.max(1.5, s * 0.22 * (1 - i / 18)); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke(); px = x; py = y;
+        }
+        ctx.fillStyle = c.body; ctx.beginPath(); ctx.moveTo(0, -s * 0.12); ctx.lineTo(s * 0.9, -s * 0.35); ctx.lineTo(s * 0.9, s * 0.5 + Math.sin(t * 2) * 3); ctx.lineTo(0, s * 0.12); ctx.fill();
+        ctx.fillStyle = '#ff7aa8'; ctx.beginPath(); ctx.arc(px, py, 2.4, 0, Math.PI * 2); ctx.fill();
+        eye(s * 0.2, -s * 0.12, 1.8);
+        break;
+      }
+      case 'tripod': {
+        ctx.strokeStyle = '#d7dee2'; ctx.lineWidth = 1.2;
+        [[-s * 0.6, -0.15], [-s * 0.1, 0], [s * 0.3, 0.15]].forEach(([x, a]) => { ctx.beginPath(); ctx.moveTo(x, s * 0.35); ctx.lineTo(x + Math.sin(a) * s * 1.6, s * 2.1); ctx.stroke(); });
+        ctx.fillStyle = c.body;
+        ctx.beginPath(); ctx.ellipse(0, 0, s * 1.1, s * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s * 1, 0); ctx.lineTo(-s * 1.5, -s * 0.3); ctx.lineTo(-s * 1.5, s * 0.3); ctx.fill();
+        ctx.strokeStyle = c.body; ctx.beginPath(); ctx.moveTo(s * 0.4, -s * 0.3); ctx.lineTo(s * 0.9, -s * 1.3); ctx.stroke();
+        eye(s * 0.75, -s * 0.08, 1.8);
+        break;
+      }
+      case 'shrimp': {
+        ctx.fillStyle = c.body; ctx.strokeStyle = 'rgba(120,100,80,.6)'; ctx.lineWidth = 1;
+        for (let i = 0; i < 7; i++) {
+          const a = -0.9 + i * 0.3, x = Math.cos(a) * s * 0.9 - s * 0.2, y = Math.sin(a) * s * 0.5 + s * 0.2;
+          ctx.beginPath(); ctx.ellipse(x, y, s * 0.24, s * 0.3, a, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+        ctx.strokeStyle = c.body; ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) { const x = -s * 0.4 + i * s * 0.25; ctx.beginPath(); ctx.moveTo(x, s * 0.5); ctx.lineTo(x + Math.sin(t * 8 + i) * 2, s * 0.85); ctx.stroke(); }
+        ctx.beginPath(); ctx.moveTo(s * 0.6, -s * 0.2); ctx.quadraticCurveTo(s * 1.3, -s * 0.8, s * 1.6, -s * 0.4); ctx.stroke();
+        eye(s * 0.55, -s * 0.1, 1.6);
+        break;
+      }
+      case 'jelly': case 'squid': case 'dumbo': default: {
+        const pulse = 1 + Math.sin(t * 2) * 0.12;
+        if (c.kind === 'jelly') {
+          ctx.fillStyle = `rgba(${c.glow},.55)`;
+          ctx.beginPath(); ctx.ellipse(0, 0, s * pulse, s * 0.7, 0, Math.PI, 0); ctx.fill();
+          ctx.strokeStyle = `rgba(${c.glow},.8)`; ctx.lineWidth = 1.5;
+          ctx.beginPath(); for (let i = 0; i < 4; i++) ctx.arc(-s * 0.35 + (i % 2) * s * 0.7, -s * 0.3 + Math.floor(i / 2) * s * 0.01, s * 0.15, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = `rgba(${c.glow},.45)`; ctx.lineWidth = 1;
+          for (let k2 = -3; k2 <= 3; k2++) { ctx.beginPath(); ctx.moveTo(k2 * s * 0.28, 0); for (let u = 0; u <= 1; u += 0.2) ctx.lineTo(k2 * s * 0.28 + Math.sin(t * 2 + u * 5 + k2) * 3, u * s * 2.2); ctx.stroke(); }
+        } else if (c.kind === 'squid') {
+          ctx.fillStyle = c.body;
+          ctx.beginPath(); ctx.ellipse(0, -s * 0.5, s * 0.55, s * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(-s * 0.6, -s * 1.1, s * 0.3, s * 0.16, -0.5 + Math.sin(t * 3) * 0.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(s * 0.6, -s * 1.1, s * 0.3, s * 0.16, 0.5 - Math.sin(t * 3) * 0.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-s * 0.5, s * 0.1); ctx.quadraticCurveTo(0, s * (1.2 + Math.sin(t * 2) * 0.2), s * 0.5, s * 0.1); ctx.fill();
+          ctx.fillStyle = '#9fd7ff'; ctx.beginPath(); ctx.arc(-s * 0.22, -s * 0.2, s * 0.13, 0, Math.PI * 2); ctx.arc(s * 0.22, -s * 0.2, s * 0.13, 0, Math.PI * 2); ctx.fill();
+        } else {
+          const flap = Math.sin(t * 3) * 0.5;
+          ctx.fillStyle = c.body;
+          ctx.save(); ctx.translate(-s * 0.7, -s * 0.35); ctx.rotate(-0.4 + flap); ctx.beginPath(); ctx.ellipse(-s * 0.2, 0, s * 0.35, s * 0.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+          ctx.save(); ctx.translate(s * 0.7, -s * 0.35); ctx.rotate(0.4 - flap); ctx.beginPath(); ctx.ellipse(s * 0.2, 0, s * 0.35, s * 0.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+          ctx.beginPath(); ctx.ellipse(0, -s * 0.25, s * 0.75, s * 0.7 * pulse, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-s * 0.75, -s * 0.1);
+          for (let i = 0; i <= 6; i++) ctx.lineTo(-s * 0.75 + i * s * 0.25, s * (0.6 + (i % 2) * 0.2 + Math.sin(t * 2 + i) * 0.08));
+          ctx.lineTo(s * 0.75, -s * 0.1); ctx.fill();
+          eye(-s * 0.28, -s * 0.3, 2.2); eye(s * 0.28, -s * 0.3, 2.2);
+        }
+      }
     }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.restore();
   }
-  function drawAngler(e) {
-    ctx.save(); ctx.translate(e.x, e.y); ctx.scale(e.dir, 1);
-    ctx.fillStyle = '#20303a';
-    ctx.beginPath(); ctx.ellipse(0, 0, 22, 15, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-32, -10); ctx.lineTo(-32, 10); ctx.fill();
-    ctx.fillStyle = '#0a1116'; ctx.beginPath(); ctx.moveTo(22, 2); ctx.lineTo(8, 4); ctx.lineTo(20, 12); ctx.fill();
-    ctx.fillStyle = '#e8eef0';
-    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(10 + k * 3, 4); ctx.lineTo(11.5 + k * 3, 8); ctx.lineTo(13 + k * 3, 4); ctx.fill(); }
-    ctx.strokeStyle = '#3c4d57'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(8, -12); ctx.quadraticCurveTo(20, -30, 30, -18); ctx.stroke();
-    ctx.restore();
-  }
+
   function drawWall(ev, y) {
     const b = band();
     const g = ctx.createLinearGradient(0, y - b / 2, 0, y + b / 2);
@@ -1381,6 +1184,12 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
       ctx.closePath();
       ctx.fillStyle = g; ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+      // a little life on the ledge: sponges and soft coral along the top edge
+      for (let x = xa + 14; x < xb - 10; x += 38) {
+        const h = 5 + ((x * 7 + ev.seed * 13) % 7);
+        ctx.fillStyle = ((x + ev.seed) % 3 < 1) ? 'rgba(220,120,110,.7)' : 'rgba(230,190,110,.6)';
+        ctx.beginPath(); ctx.ellipse(x, y - b / 2 + jag(x, ev.seed) - h / 2, 3, h / 2 + 1, 0, 0, Math.PI * 2); ctx.fill();
+      }
     };
     let x0 = -12;
     for (const gp of gaps) {
@@ -1389,75 +1198,21 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
       x0 = gp.c + gp.w / 2;
     }
     seg(x0, W + 12);
-    if (!ev.hatch) for (const gp of gaps) {
-      if (!ev.closed.has(gp.i)) continue;
-      ctx.fillStyle = 'rgba(0,0,0,.25)';
-      for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.arc(gp.c - gp.w / 3 + (k * gp.w) / 6, y + Math.sin(k * 3 + ev.seed) * b * 0.25, 4 + (k % 3) * 2, 0, Math.PI * 2); ctx.fill(); }
-    }
     if (ev.hatch) {
       const gp = gaps[0], half = (gp.w / 2) * (1 - ev.hatchOpen);
       if (half > 0.5) {
         [[gp.c - gp.w / 2, half], [gp.c + gp.w / 2 - half, half]].forEach(([x, w]) => {
           ctx.fillStyle = '#6b7a80'; ctx.fillRect(x, y - b / 2 + 3, w, b - 6);
-          ctx.save(); ctx.beginPath(); ctx.rect(x, y - b / 2 + 3, w, b - 6); ctx.clip();
-          ctx.fillStyle = 'rgba(255,181,71,.8)';
-          for (let sx = x - b; sx < x + w + b; sx += 16) { ctx.beginPath(); ctx.moveTo(sx, y + b / 2); ctx.lineTo(sx + 8, y + b / 2); ctx.lineTo(sx + 8 + b, y - b / 2); ctx.lineTo(sx + b, y - b / 2); ctx.fill(); }
-          ctx.restore();
           ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2; ctx.strokeRect(x, y - b / 2 + 3, w, b - 6);
+          ctx.fillStyle = 'rgba(255,181,71,.8)'; ctx.fillRect(x, y - 2, w, 4);
         });
       }
     }
-    if (['pass', 'crashed', 'breached', 'recover'].includes(ev.phase)) {
+    if (['pass', 'crashed', 'recover'].includes(ev.phase)) {
       const gp = gaps[ev.correctIdx] || gaps[0];
       const gg = ctx.createRadialGradient(gp.c, y, 2, gp.c, y, gp.w * 0.8);
       gg.addColorStop(0, 'rgba(111,227,207,.35)'); gg.addColorStop(1, 'rgba(111,227,207,0)');
       ctx.fillStyle = gg; ctx.fillRect(gp.c - gp.w, y - b, gp.w * 2, b * 2);
-    }
-  }
-  const bossScale = () => clamp(W / 700 + 0.45, 0.8, 1.3);
-  function drawBoss(ev) {
-    const bx = ev.x, by = bossY(ev), sc = bossScale(), def = ev.def;
-    ctx.save(); ctx.translate(bx, by); ctx.scale(sc, sc);
-    const body = ev.hit > 0 ? '#ffe2c4' : def.color;
-    ctx.lineCap = 'round';
-    for (let k = 0; k < 8; k++) {                                                  // arms reaching up toward the sub
-      const side = k - 3.5, len = 120 + (k % 3) * 26;
-      let px = side * 7, py = -8;
-      for (let s = 1; s <= 12; s++) {
-        const t = s / 12;
-        const nx = side * 7 + side * 16 * t + Math.sin(time * 2 + k + t * 5) * 16 * t;
-        const ny = -8 - len * t;
-        ctx.strokeStyle = body; ctx.lineWidth = 11 * (1 - t) + 2;
-        ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke();
-        px = nx; py = ny;
-      }
-    }
-    const mg = ctx.createLinearGradient(0, -20, 0, 180);
-    mg.addColorStop(0, body); mg.addColorStop(1, def.dark);
-    ctx.fillStyle = mg;
-    ctx.beginPath(); ctx.ellipse(0, 70, 48, 92, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-46, 130); ctx.quadraticCurveTo(-90, 160, -40, 175); ctx.lineTo(0, 150); ctx.lineTo(40, 175); ctx.quadraticCurveTo(90, 160, 46, 130); ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,0,.18)';
-    for (let k = 0; k < 7; k++) { ctx.beginPath(); ctx.arc(Math.sin(k * 2.7) * 28, 30 + k * 16, 4 + (k % 3), 0, Math.PI * 2); ctx.fill(); }
-    ctx.restore();
-
-    if (ev.lash > 0) {
-      const k = ev.lash > 0.7 ? (1 - ev.lash) / 0.3 : ev.lash / 0.7;
-      const tx = bx + (S.x - bx) * k, ty = by + (subY() + 10 - by) * k;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = def.color; ctx.lineWidth = 12;
-      ctx.beginPath(); ctx.moveTo(bx, by - 10); ctx.quadraticCurveTo(bx + 120 * Math.sign(S.x - bx || 1), (by + ty) / 2, tx, ty); ctx.stroke();
-      ctx.strokeStyle = def.dark; ctx.lineWidth = 4; ctx.stroke();
-    }
-  }
-  function drawBossEyes(ev) {
-    const bx = ev.x, by = bossY(ev), sc = bossScale();
-    for (const s of [-1, 1]) {
-      const ex = bx + s * 24 * sc, ey = by + 12 * sc;
-      const g = ctx.createRadialGradient(ex, ey, 0, ex, ey, 26 * sc);
-      g.addColorStop(0, ev.def.eye); g.addColorStop(0.35, ev.def.eye + '88'); g.addColorStop(1, ev.def.eye + '00');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, 26 * sc, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#05080b'; ctx.beginPath(); ctx.ellipse(ex + clamp((S.x - ex) * 0.01, -3, 3), ey - 1, 3 * sc, 7 * sc, 0, 0, Math.PI * 2); ctx.fill();
     }
   }
   function drawSub(x, y, s) {
@@ -1468,7 +1223,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     ctx.beginPath(); ctx.roundRect(-36, -14, 72, 24, 12); ctx.fill();
     ctx.fillStyle = '#b27a22'; ctx.fillRect(-34, 1, 68, 4);
     ctx.fillStyle = '#c98b2c'; ctx.beginPath(); ctx.roundRect(-9, -22, 18, 10, 3); ctx.fill();
-    const blade = Math.abs(Math.sin(time * 18)) * 8 + 1;
+    const blade = Math.abs(Math.sin(time * 12)) * 8 + 1;
     ctx.fillStyle = '#8a969b'; ctx.beginPath(); ctx.ellipse(-40, -2, 2.5, blade, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#9fb3ba'; ctx.beginPath(); ctx.arc(0, 21, 11, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#5d6f76'; ctx.lineWidth = 2; ctx.stroke();
@@ -1483,7 +1238,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
 
   function draw() {
     const d = S.depthShown, ev = S.ev;
-    const inPlay = ev && (S.mode === 'play' || S.mode === 'paused' || S.mode === 'refit');
+    const inPlay = ev && (S.mode === 'play' || S.mode === 'paused');
     const water = waterAt(d), deeper = waterAt(Math.min(MAX_DEPTH, d + 900));
     ctx.save();
     if (shake) ctx.translate(rand(-0.5, 0.5) * shake, rand(-0.5, 0.5) * shake);
@@ -1503,33 +1258,35 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
       ctx.globalCompositeOperation = 'source-over';
     }
 
+    for (const f of shoals) {
+      ctx.fillStyle = 'rgba(4,22,34,.45)';
+      for (let k = 0; k < f.n; k++) {
+        const fx = f.x - f.dir * k * 14 + Math.sin(k * 2.1) * 6, fy = f.y + Math.sin(k * 1.7 + time * 3) * 8 + (k % 2) * 10;
+        ctx.beginPath(); ctx.ellipse(fx, fy, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(fx - f.dir * 6, fy); ctx.lineTo(fx - f.dir * 11, fy - 3.5); ctx.lineTo(fx - f.dir * 11, fy + 3.5); ctx.fill();
+      }
+    }
     ctx.fillStyle = 'rgba(225,238,242,.55)';
     for (const p of snow) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
 
     if (inPlay && ev.type === 'floor') {
-      const fy = H - Math.min(1, ev.t / 1.6) * H * 0.3;
-      ctx.fillStyle = '#10181d';
+      const fy = H - Math.min(1, ev.t / 1.8) * H * 0.3;
+      ctx.fillStyle = '#1a2227';
       ctx.beginPath(); ctx.moveTo(0, H);
       for (let x = 0; x <= W; x += 16) ctx.lineTo(x, fy + Math.sin(x * 0.02) * 10 + Math.sin(x * 0.07) * 4);
       ctx.lineTo(W, H); ctx.fill();
     }
 
-    const boss = inPlay ? (ev.type === 'boss' ? ev : ev.type === 'sunk' ? ev.boss : null) : null;
-    if (boss) drawBoss(boss);
-    for (const e of ents) { if (e.type === 'rock') drawRock(e); else if (e.type === 'angler') drawAngler(e); }
-
     let wy = 0;
     if (inPlay && ev.type === 'shelf') { wy = wallY(ev); drawWall(ev, wy); }
 
     const s = subScale();
-    const sunk = inPlay && ev.type === 'sunk';
-    const sy = subY() + Math.sin(time * 1.8) * 3 + (sunk ? ev.t * ev.t * 30 : 0) - (inPlay && ev.type === 'shelf' && (ev.phase === 'crashed' || ev.phase === 'breached') ? ev.recoil * 0.2 : 0);
-    const blink = S.invuln > 0 && Math.floor(time * 12) % 2 === 0;
-    if (!blink) drawSub(S.x, sy, s);
+    const sy = subY() + Math.sin(time * 1.6) * 3 - (inPlay && ev.type === 'shelf' && ev.phase === 'crashed' ? ev.recoil * 0.2 : 0);
+    drawSub(S.x, sy, s);
 
-    // darkness closes in with depth; the lamp, upgrades and a hot streak push it back
-    const dark = Math.min(0.88, 0.05 + (d / 1300) * 0.83);
-    const lampR = (Math.min(W, H) * 0.42 * (1 + Math.min(S.streak, 10) * 0.05) + 60) * (1 + 0.3 * S.up.lamp) * (S.overdrive > 0 ? 1.3 : 1);
+    // darkness closes in with depth; the lamp (brighter on a streak) pushes it back
+    const dark = Math.min(0.8, 0.05 + (d / 1300) * 0.75);
+    const lampR = Math.min(W, H) * 0.5 * (1 + Math.min(S.streak, 10) * 0.05) + 70;
     const lx = S.x, ly = sy + 70;
     const dg = ctx.createRadialGradient(lx, ly, lampR * 0.2, lx, ly, lampR);
     dg.addColorStop(0, 'rgba(1,4,9,0)'); dg.addColorStop(1, `rgba(1,4,9,${dark})`);
@@ -1537,77 +1294,32 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
 
     ctx.globalCompositeOperation = 'lighter';
     const beam = ctx.createLinearGradient(0, sy + 20, 0, sy + 20 + lampR);
-    beam.addColorStop(0, `rgba(255,181,71,${0.08 + dark * 0.12})`); beam.addColorStop(1, 'rgba(255,181,71,0)');
+    beam.addColorStop(0, `rgba(255,181,71,${0.07 + dark * 0.1})`); beam.addColorStop(1, 'rgba(255,181,71,0)');
     ctx.fillStyle = beam;
     ctx.beginPath(); ctx.moveTo(lx - 10 * s, sy + 22 * s); ctx.lineTo(lx + 10 * s, sy + 22 * s); ctx.lineTo(lx + lampR * 0.45, sy + 20 + lampR); ctx.lineTo(lx - lampR * 0.45, sy + 20 + lampR); ctx.fill();
-
-    for (const e of ents) {
-      if (e.type === 'pearl') { glow(e.x, e.y, 14, '255,220,235', 0.55); ctx.fillStyle = '#fff4f8'; ctx.beginPath(); ctx.arc(e.x, e.y, 4, 0, Math.PI * 2); ctx.fill(); }
-      else if (e.type === 'kit') {
-        glow(e.x, e.y, 26, '111,227,207', 0.5);
-        ctx.fillStyle = '#6fe3cf'; ctx.fillRect(e.x - 9, e.y - 3, 18, 6); ctx.fillRect(e.x - 3, e.y - 9, 6, 18);
-      } else if (e.type === 'angler') {
-        const lxp = e.x + e.dir * 30, lyp = e.y - 18 + Math.sin(time * 3 + e.ph) * 2;
-        glow(lxp, lyp, 30, '180,255,200', 0.6);
-        ctx.fillStyle = '#eaffef'; ctx.beginPath(); ctx.arc(lxp, lyp, 3, 0, Math.PI * 2); ctx.fill();
-      } else if (e.type === 'ink') {
-        glow(e.x, e.y, e.r * 2.6, '190,90,255', 0.45);
-        ctx.fillStyle = 'rgba(40,10,60,.9)'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
-      } else if (e.type === 'jelly') {
-        const a = Math.min(1, dark + 0.2) * 0.8;
-        glow(e.x, e.y, e.s * 3, e.hue, 0.35 * a);
-        const pulse = 1 + Math.sin(time * 2 + e.ph) * 0.12;
-        ctx.fillStyle = `rgba(${e.hue},${0.5 * a})`;
-        ctx.beginPath(); ctx.ellipse(e.x, e.y, e.s * pulse, e.s * 0.7, 0, Math.PI, 0); ctx.fill();
-        ctx.strokeStyle = `rgba(${e.hue},${0.35 * a})`; ctx.lineWidth = 1;
-        for (let k = -2; k <= 2; k++) {
-          ctx.beginPath(); ctx.moveTo(e.x + k * e.s * 0.35, e.y);
-          for (let t = 0; t <= 1; t += 0.2) ctx.lineTo(e.x + k * e.s * 0.35 + Math.sin(time * 2 + t * 5 + k) * 3, e.y + t * e.s * 2.4);
-          ctx.stroke();
-        }
-      }
-    }
-    if (boss) drawBossEyes(boss);
-    if (inPlay && ev.type === 'boss' && ev.v && !ev.v.done) for (const o of ev.v.orbs) if (!ev.v.closed.has(o.i)) glow(o.x, o.y, 60, '111,227,207', 0.18);
-    if (inPlay && ev.type === 'boss') for (const f of flares) {
-      const tx = ev.x, ty = bossY(ev);
-      const fx = f.x0 + (tx - f.x0) * f.t, fy = f.y0 + (ty - f.y0) * f.t - Math.sin(f.t * Math.PI) * 40;
-      glow(fx, fy, 34, '255,190,90', 0.9);
-      ctx.fillStyle = '#fff3d6'; ctx.beginPath(); ctx.arc(fx, fy, 4, 0, Math.PI * 2); ctx.fill();
-      if (!RM) bits.push({ x: fx, y: fy, vx: rand(-20, 20), vy: rand(-20, 20), life: 0.35, c: '255,170,80' });
-    }
     glow(S.x + 4 * s, sy + 22 * s, 9 * s, '255,210,122', 0.8);
-    if (S.overdrive > 0) {
-      const pr = 44 * s + Math.sin(time * 10) * 3;
-      ctx.strokeStyle = `rgba(111,227,207,${0.4 + 0.3 * Math.sin(time * 8)})`; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(S.x, sy + 4, pr, 0, Math.PI * 2); ctx.stroke();
-      glow(S.x, sy, 70 * s, '111,227,207', 0.18);
-    }
-    for (const b2 of bits) { ctx.fillStyle = `rgba(${b2.c},${Math.min(1, b2.life * 1.6)})`; ctx.fillRect(b2.x, b2.y, 2.5, 2.5); }
     ctx.globalCompositeOperation = 'source-over';
+
+    // creatures sit above the darkness so they are always easy to spot
+    for (const k of critters) {
+      if (!k.snapped) {
+        const r = k.c.size * 1.9 + 10 + Math.sin(time * 3 + k.ph) * 3;
+        ctx.globalCompositeOperation = 'lighter';
+        glow(k.x, k.y, r * 1.3, '111,227,207', 0.12 + dark * 0.12);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      if (k.c.kind === 'angler') { ctx.globalCompositeOperation = 'lighter'; glow(k.x + k.dir * k.c.size * 1.5, k.y - k.c.size * 1.1, 26, '180,255,210', 0.7); ctx.globalCompositeOperation = 'source-over'; }
+      drawCritter(k);
+    }
 
     ctx.strokeStyle = 'rgba(210,235,242,.6)'; ctx.lineWidth = 1;
     for (const b of bubbles) { ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
-
-    ctx.font = '700 13px "JetBrains Mono", ui-monospace, monospace';
-    ctx.textAlign = 'center';
-    for (const f of floaters) { ctx.fillStyle = `rgba(${f.rgb},${1 - f.t / 1.1})`; ctx.fillText(f.text, f.x, f.y); }
-    ctx.textAlign = 'left';
-
-    if (inPlay && ev.type === 'cruise' && ev.warn) {
-      const a = 0.18 + 0.12 * Math.sin(time * 6);
-      const wg = ctx.createLinearGradient(0, H * 0.6, 0, H);
-      wg.addColorStop(0, 'rgba(255,107,91,0)'); wg.addColorStop(1, `rgba(255,107,91,${a})`);
-      ctx.fillStyle = wg; ctx.fillRect(0, H * 0.6, W, H * 0.4);
-    }
-    if (flash > 0) { ctx.fillStyle = `rgba(255,80,60,${flash * 0.35})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+    if (camFlash > 0) { ctx.fillStyle = `rgba(255,255,255,${camFlash * 0.35})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
     ctx.restore();
 
     drawGauge(d);
-
     if (inPlay && ev.type === 'shelf') layoutShelf(ev, wy);
-    if (inPlay && ev.type === 'boss' && ev.v) layoutOrbs(ev.v);
   }
   function layoutShelf(ev, y) {
     const kids = $('labels').children;
@@ -1616,12 +1328,6 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     if (ev.hatch) { place(kids[0], W / 2, y, Math.min(W * 0.5, 130), alpha); return; }
     const lw = W / ev.n, w = Math.min(lw - 8, Math.min(lw * 0.74, 150) + 28);
     for (let i = 0; i < kids.length; i++) place(kids[i], laneX(i, ev.n), y, w, alpha);
-  }
-  function layoutOrbs(v) {
-    const kids = $('labels').children;
-    if (!kids.length) return;
-    const w = Math.min((W / v.n) - 10, 170);
-    for (let i = 0; i < kids.length && i < v.orbs.length; i++) place(kids[i], v.orbs[i].x, v.orbs[i].y, w, 1);
   }
   function drawGauge(d) {
     const top = 14, bottom = H - 14, x = 12;
@@ -1636,9 +1342,6 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
       ctx.fillStyle = 'rgba(160,195,205,.55)'; ctx.fillRect(x - 4, yy, 9, 1);
       if (labels && m > 0) ctx.fillText(`${fmt(m)} m · ${name}`, x + 10, yy);
     }
-    for (const m of S.bossesAt.slice(S.bossesDone)) {
-      ctx.fillStyle = 'rgba(255,107,91,.85)'; ctx.beginPath(); ctx.arc(x, yOf(m), 3.5, 0, Math.PI * 2); ctx.fill();
-    }
     const yy = yOf(Math.min(MAX_DEPTH, d));
     ctx.fillStyle = '#ffb547';
     ctx.beginPath(); ctx.moveTo(x - 5, yy - 5); ctx.lineTo(x + 3, yy); ctx.lineTo(x - 5, yy + 5); ctx.fill();
@@ -1649,7 +1352,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    update(S.mode === 'paused' || S.mode === 'refit' ? 0 : dt);
+    update(S.mode === 'paused' ? 0 : dt);
     draw();
     renderHud();
     requestAnimationFrame(frame);
@@ -1668,7 +1371,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
     const ev = S.ev;
     if (KEYMAP[e.key]) { keys.add(KEYMAP[e.key]); e.preventDefault(); return; }
     if (!ev) return;
-    if (ev.type === 'shelf' && (ev.phase === 'crashed' || ev.phase === 'breached')) {
+    if (ev.type === 'shelf' && ev.phase === 'crashed') {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); continueDive(); }
       return;
     }
@@ -1677,9 +1380,7 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
       e.preventDefault();
       if (ev.type === 'shelf' && !ev.hatch) chooseLane(laneUnderSub(ev));
     } else if (/^[1-9]$/.test(e.key)) {
-      const i = +e.key - 1;
-      if (ev.type === 'shelf') chooseLane(i);
-      else if (ev.type === 'boss' && ev.v && !ev.v.done && i < ev.v.n && !ev.v.closed.has(i)) S.autoOrb = i;
+      if (ev.type === 'shelf') chooseLane(+e.key - 1);
     } else if (e.key === 's' || e.key === 'S') useSonar();
   });
   document.addEventListener('keyup', (e) => { if (KEYMAP[e.key]) keys.delete(KEYMAP[e.key]); });
@@ -1708,10 +1409,6 @@ Which animal has three hearts and blue blood? | Octopus | Sea cucumber | Starfis
   }
   $('btnResume').addEventListener('click', resumeGame);
   $('btnAbort').addEventListener('click', () => { $('pause').hidden = true; toSetup(); });
-  $('btnRefitGo').addEventListener('click', () => {
-    $('refit').hidden = true; S.mode = 'play'; last = performance.now();
-    nextAfterAnswer();
-  });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
   /* ================= Setup ================= */
@@ -1748,11 +1445,10 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
   });
 
   function toSetup() {
-    S.mode = 'setup'; S.ev = null; S.streak = 0; S.hp = S.maxHp = 6; S.depthTarget = 0; S.overdrive = 0; S.invuln = 0;
-    S.bossesAt = [];
-    ents = []; flares = [];
+    S.mode = 'setup'; S.ev = null; S.streak = 0; S.depthTarget = 0;
+    critters = [];
     clearLabels();
-    ['crash', 'hatchForm', 'end', 'bossBar', 'banner', 'refit'].forEach((id) => { $(id).hidden = true; });
+    ['crash', 'hatchForm', 'end', 'fact'].forEach((id) => { $(id).hidden = true; });
     setIdle('Paste your questions to plot a dive.');
     $('rCount').textContent = 'Dive plan';
     $('setup').hidden = false;
@@ -1778,7 +1474,7 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
   }
   function saveSetup() {
     store.set('topic', $('topic').value); store.set('deck', $('deck').value);
-    store.set('pace', document.querySelector('input[name=pace]:checked').value); store.set('hatches', $('hatches').checked);
+    store.set('pace', document.querySelector('input[name=pace]:checked').value); store.set('typed', $('hatches').checked);
     store.set('aiCount', $('aiCount').value);
   }
   $('deck').addEventListener('input', () => { refreshParse(); saveSetup(); });
@@ -1814,7 +1510,7 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
     $('aiCount').value = String(store.get('aiCount', '20'));
     const paceEl = document.querySelector(`input[name=pace][value="${store.get('pace', 'standard')}"]`);
     if (paceEl) paceEl.checked = true;
-    $('hatches').checked = store.get('hatches', true);
+    $('hatches').checked = store.get('typed', false);
     if (COARSE) $('hint').hidden = true;
     syncSound();
     resize();
