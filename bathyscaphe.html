@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-  /* A single, deliberately dark world: the deep sea. Colors are set explicitly for every surface. */
+  /* A single, deliberately dark game world. Colors are set explicitly for every surface. */
   :root {
     color-scheme: dark;
     --abyss: #030b14;
@@ -42,11 +42,16 @@
   .brand { display: flex; flex-direction: column; min-width: 0; line-height: 1; }
   .mark { font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sodium); }
   .expedition { font-size: 12px; color: var(--muted); margin-top: 4px; max-width: 30ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gauges { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .gauges { display: flex; flex-wrap: wrap; gap: 8px 20px; }
   .gauge { display: flex; flex-direction: column; gap: 4px; }
   .label { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .val { font-family: var(--mono); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
-  .val.log-count { color: var(--lume); }
+  #gWorld { color: var(--lume); }
+  .streak { display: flex; align-items: center; gap: 8px; }
+  .pips { display: flex; gap: 2px; }
+  .pips i { width: 6px; height: 12px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); transition: background 0.2s; }
+  .pips i.on { background: var(--sodium); }
+  .pips.hot i.on { background: var(--lume); }
   .tools { display: flex; gap: 6px; flex-wrap: wrap; }
 
   .btn {
@@ -64,8 +69,10 @@
   .readout { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px 0; display: grid; gap: 8px; overflow: hidden; }
   .meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
   #rZone { color: var(--lume); }
+  .qtype { color: var(--sodium); }
   .question { margin: 0; font-size: clamp(17px, 2.4vw, 23px); line-height: 1.35; font-weight: 700; text-wrap: balance; max-height: 6.9em; overflow: auto; }
   .question.idle { font-weight: 400; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
+  .blank { display: inline-block; min-width: 3.2em; border-bottom: 3px solid var(--sodium); margin-inline: 0.15em; line-height: 1; }
   .hatch-form { display: grid; gap: 6px; padding-bottom: 4px; }
   .hatch-row { display: flex; gap: 8px; }
   .hatch-row input { flex: 1; min-width: 0; }
@@ -79,11 +86,12 @@
   .tag {
     position: absolute; top: 0; left: 0; pointer-events: auto; box-sizing: border-box;
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 6px 8px 7px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: rgba(3, 12, 20, 0.84);
+    padding: 6px 8px 7px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: rgba(3, 12, 20, 0.86);
     font-size: 14px; line-height: 1.25; text-align: center; overflow-wrap: break-word; hyphens: auto; cursor: pointer;
     transition: border-color 0.15s, box-shadow 0.15s, opacity 0.25s, color 0.15s;
   }
   .tag .k { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+  .tag.tf { font-size: 17px; font-weight: 700; padding-block: 8px 10px; }
   .tag.aim { border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.16), 0 0 26px rgba(255, 181, 71, 0.22); }
   .tag.right { border-color: var(--lume); color: #eafffb; box-shadow: 0 0 24px rgba(111, 227, 207, 0.45); }
   .tag.wrong { border-color: var(--soft-red); color: #ffe0da; }
@@ -95,17 +103,15 @@
     font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
     padding: 6px 12px; border-radius: 999px; background: rgba(3, 12, 20, 0.85); border: 1px solid var(--lume); color: var(--lume);
   }
-  .fact {
-    position: absolute; top: 12px; right: 12px; width: min(330px, calc(100% - 48px)); box-sizing: border-box; pointer-events: none; z-index: 2;
-    display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px;
-    background: rgba(6, 22, 32, 0.92); border: 1px solid rgba(111, 227, 207, 0.5);
-    animation: rise 0.35s ease-out;
+  .warp {
+    position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); pointer-events: none; z-index: 3; text-align: center;
+    display: grid; gap: 6px; width: calc(100% - 32px);
+    animation: warpIn 0.5s ease-out;
   }
-  .fact p { margin: 0; }
-  .fact .label { color: var(--lume); }
-  .fact .name { font-weight: 700; font-size: 16px; }
-  .fact .text { font-size: 13.5px; line-height: 1.45; color: var(--ink); }
-  @keyframes rise { from { opacity: 0; transform: translateY(-6px); } }
+  .warp p { margin: 0; }
+  .warp .label { color: #fff; font-size: 12px; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+  .warp-title { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 7vw, 64px); text-transform: uppercase; letter-spacing: 0.04em; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55); line-height: 1; text-wrap: balance; }
+  @keyframes warpIn { from { opacity: 0; transform: translate(-50%, -40%) scale(0.92); } }
   .crash {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(420px, calc(100% - 28px)); box-sizing: border-box;
     background: rgba(8, 26, 39, 0.95); border: 1px solid var(--soft-red); border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; overflow: hidden;
@@ -116,7 +122,7 @@
   .note { font-size: 13px; color: var(--muted); }
   .crash .btn { justify-self: start; margin-top: 4px; }
   .crash-timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--soft-red); transform-origin: left; }
-  .hint { position: absolute; right: 12px; bottom: 8px; margin: 0; font-family: var(--mono); font-size: 10.5px; color: rgba(160, 195, 205, 0.6); pointer-events: none; }
+  .hint { position: absolute; right: 12px; bottom: 8px; margin: 0; font-family: var(--mono); font-size: 10.5px; color: rgba(200, 220, 228, 0.6); pointer-events: none; }
 
   /* ---------- Overlays ---------- */
   .overlay { position: fixed; inset: 0; z-index: 10; overflow: auto; display: flex; background: rgba(2, 7, 12, 0.6); backdrop-filter: blur(3px); padding-inline: 16px; padding-block: 24px; }
@@ -134,30 +140,35 @@
   .features { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; font-size: 13.5px; color: var(--muted); }
   .features b { color: var(--ink); }
   .field { display: grid; gap: 6px; }
-  .field input[type=text], .field textarea, .hatch-row input {
+  .field input[type=text], .field textarea, .hatch-row input, .field select {
     background: var(--field); border: 1px solid var(--line-strong); border-radius: 8px; padding: 10px 12px; box-sizing: border-box; width: 100%;
   }
   .field input:focus, .field textarea:focus, .hatch-row input:focus { outline: none; border-color: var(--sodium); box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.15); }
   .field textarea { font-family: var(--mono); font-size: 12.5px; line-height: 1.55; min-height: 170px; resize: vertical; }
-  .step { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(4, 19, 32, 0.6); }
+  .step { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(4, 19, 32, 0.6); }
   .step-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
   .step-head .label { color: var(--sodium); }
   .count { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
   .count select { padding: 5px 8px; background: var(--field); border: 1px solid var(--line-strong); border-radius: 6px; }
+  .types { display: flex; flex-wrap: wrap; gap: 8px; border: 0; margin: 0; padding: 0; }
+  .types legend { padding: 0; margin-bottom: 8px; }
+  .chip { display: flex; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 13px; cursor: pointer; }
+  .chip:has(input:checked) { border-color: var(--sodium); background: rgba(255, 181, 71, 0.08); }
+  .chip input { accent-color: var(--sodium); margin: 0; }
   .prompt { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; padding: 10px 12px; border-radius: 8px; background: var(--field); border: 1px dashed var(--line-strong); user-select: text; }
   .help { font-size: 13px; color: var(--muted); }
-  .help code { font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--field); padding: 1px 5px; border-radius: 4px; }
+  .help code, .formats code { font-family: var(--mono); font-size: 12px; color: var(--ink); background: var(--field); padding: 1px 5px; border-radius: 4px; }
+  .formats { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
   .status { font-family: var(--mono); font-size: 12px; color: var(--lume); }
   .status.warn { color: var(--soft-red); }
   .opts { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: end; }
+  .opts .field select { width: auto; padding: 7px 10px; }
   .seg { display: flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
   .seg label { cursor: pointer; }
   .seg input { position: absolute; opacity: 0; pointer-events: none; }
   .seg span { display: block; padding: 7px 12px; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
   .seg input:checked + span { background: var(--sodium); color: var(--sodium-ink); font-weight: 700; }
   .seg input:focus-visible + span { outline: 2px solid var(--lume); outline-offset: -2px; }
-  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
-  .check input { accent-color: var(--sodium); width: 16px; height: 16px; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .keys { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.8; }
   kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; color: var(--ink); }
@@ -167,13 +178,9 @@
   .stat { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
   .stat .val { font-size: 20px; }
   .record { font-family: var(--mono); font-size: 12px; color: var(--sodium); }
-  .book { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-  .entry { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); }
-  .entry .n { font-size: 13.5px; font-weight: 700; }
-  .entry .z { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-  .entry.locked .n { color: var(--muted); font-weight: 400; }
-  .entry.new { border-color: var(--lume); }
-  .entry.new .z { color: var(--lume); }
+  .worlds { display: flex; flex-wrap: wrap; gap: 8px; }
+  .world-chip { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; border: 1px solid var(--line); color: var(--muted); }
+  .world-chip.on { color: var(--ink); border-color: var(--lume); background: rgba(111, 227, 207, 0.08); }
   .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 220px; overflow: auto; }
   .log li { display: grid; gap: 2px; padding: 8px 12px; border-left: 3px solid var(--soft-red); background: var(--field); border-radius: 0 8px 8px 0; }
   .log li.clean { border-left-color: var(--lume); color: var(--lume); }
@@ -192,7 +199,7 @@
     .hint { display: none; }
   }
   @media (max-height: 620px) { .question { max-height: 4.2em; } }
-  @media (prefers-reduced-motion: reduce) { .fact { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .warp { animation: none; } }
 </style>
 
 <div id="app">
@@ -202,24 +209,23 @@
       <span class="expedition" id="expName">Expedition · The Deep Ocean</span>
     </div>
     <div class="gauges">
-      <div class="gauge"><span class="label">Depth</span><span class="val" id="gDepth">0 m</span></div>
-      <div class="gauge wide"><span class="label">Pressure</span><span class="val" id="gPress">1 atm</span></div>
-      <div class="gauge"><span class="label">Streak</span><span class="val" id="gStreak">0</span></div>
-      <div class="gauge"><span class="label">Logbook</span><span class="val log-count" id="gLog">0/14</span></div>
+      <div class="gauge"><span class="label">World</span><span class="val" id="gWorld">Ocean</span></div>
+      <div class="gauge"><span class="label">Answered</span><span class="val" id="gProg">0/0</span></div>
+      <div class="gauge"><span class="label">Streak · 10 = new world</span><span class="streak"><span class="val" id="gStreak">0</span><span class="pips" id="gPips"></span></span></div>
       <div class="gauge wide"><span class="label">Score</span><span class="val" id="gScore">0</span></div>
     </div>
     <div class="tools">
-      <button class="btn" id="btnSonar" type="button" title="Sonar crosses out two wrong answers (S)">Hint <b id="sonarCount">2</b></button>
+      <button class="btn" id="btnSonar" type="button" title="Crosses out wrong answers (S)">Hint <b id="sonarCount">2</b></button>
       <button class="btn" id="btnSound" type="button" aria-pressed="true">Sound on</button>
       <button class="btn" id="btnPause" type="button">Pause</button>
     </div>
   </header>
 
   <section class="readout" aria-live="polite">
-    <div class="meta"><span id="rZone">Sunlight zone</span><span id="rCount">Dive plan</span></div>
+    <div class="meta"><span id="rZone">Sunlight zone</span><span><span class="qtype" id="rType"></span><span id="rCount">Dive plan</span></span></div>
     <p class="question idle" id="rQuestion">Paste your questions to plot a dive.</p>
     <form class="hatch-form" id="hatchForm" hidden autocomplete="off">
-      <label class="label" for="hatchInput">Sealed hatch · type the answer to open it</label>
+      <label class="label" for="hatchInput">Type your answer, then press Enter</label>
       <div class="hatch-row">
         <input id="hatchInput" type="text" spellcheck="false" autocapitalize="off" autocomplete="off">
         <button class="btn primary" type="submit">Open</button>
@@ -231,15 +237,14 @@
   <main class="stage" id="stage">
     <canvas id="sea" aria-hidden="true"></canvas>
     <div id="labels" lang="en"></div>
-    <div class="fact" id="fact" hidden>
-      <p class="label" id="factTitle">New in your logbook</p>
-      <p class="name" id="factName"></p>
-      <p class="text" id="factText"></p>
+    <div class="warp" id="warp" hidden>
+      <p class="label" id="warpKicker">10 in a row</p>
+      <p class="warp-title" id="warpTitle">The Volcano</p>
     </div>
     <div class="toast" id="toast" hidden></div>
     <div class="crash" id="crash" hidden role="status">
       <p class="label">Not quite</p>
-      <p class="note">The right passage was</p>
+      <p class="note">The right answer was</p>
       <p class="ans" id="crashAns"></p>
       <p class="note">This one will come back around later.</p>
       <button class="btn primary" id="btnContinue" type="button">Continue</button>
@@ -255,12 +260,12 @@
     <div class="stack">
       <span class="label">Dive plan</span>
       <h1>Bathyscaphe</h1>
-      <p class="lede">A relaxed trip to the bottom of the ocean. Answer questions to sink deeper, and photograph the sea life you meet on the way down.</p>
+      <p class="lede">A relaxed trivia trip in a very adaptable little sub. Steer through the opening marked with the right answer to keep going.</p>
       <ul class="features">
-        <li><b>Answer to descend.</b> Steer through the opening marked with the right answer.</li>
-        <li><b>Photograph sea life.</b> Glide close to a creature to snap it and learn a fact.</li>
+        <li><b>Get 10 in a row</b> and you warp to a new world: the ocean, a volcano, deep space, the ice caverns.</li>
         <li><b>No game over.</b> A wrong answer just comes back later for another try.</li>
-        <li><b>Fill the logbook.</b> 14 real species live at different depths. Can you find them all?</li>
+        <li><b>Four question types:</b> multiple choice, true or false, fill in the blank and type the answer.</li>
+        <li><b>Hints</b> cross out wrong answers. You earn one for every 3 in a row.</li>
       </ul>
     </div>
 
@@ -276,6 +281,13 @@
           <select id="aiCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select>
         </label>
       </div>
+      <fieldset class="types">
+        <legend class="label">Question types to ask for</legend>
+        <label class="chip"><input type="checkbox" id="tMC" checked> Multiple choice</label>
+        <label class="chip"><input type="checkbox" id="tTF" checked> True or false</label>
+        <label class="chip"><input type="checkbox" id="tBLANK" checked> Fill in the blank</label>
+        <label class="chip"><input type="checkbox" id="tTYPE" checked> Type the answer</label>
+      </fieldset>
       <pre class="prompt" id="aiPrompt"></pre>
       <div class="row">
         <button class="btn" type="button" id="btnCopy">Copy prompt</button>
@@ -286,8 +298,14 @@
     <div class="step">
       <div class="step-head"><label class="label" for="deck">Step 2 · Paste the reply here</label></div>
       <div class="field">
-        <textarea id="deck" spellcheck="false" placeholder="What gas do plants absorb? | Carbon dioxide | Oxygen | Nitrogen | Helium"></textarea>
-        <p class="help">One question per line: <code>Question | Right answer | Wrong | Wrong | Wrong</code>. Wrong answers are optional; without them the game borrows your other answers. Numbering, bullets and a <code>Topic:</code> line are fine.</p>
+        <textarea id="deck" spellcheck="false" placeholder="MC | What gas do plants absorb? | Carbon dioxide | Oxygen | Nitrogen | Helium"></textarea>
+        <ul class="formats">
+          <li><code>MC | Question | Right | Wrong | Wrong | Wrong</code> multiple choice</li>
+          <li><code>TF | Statement | True</code> (or <code>False</code>) true or false</li>
+          <li><code>BLANK | Sentence with ___ gap | Right | Wrong | Wrong</code> fill in the blank</li>
+          <li><code>TYPE | Question | Answer</code> type the answer</li>
+        </ul>
+        <p class="help">Lines without a tag count as multiple choice. Numbering, bullets and a <code>Topic:</code> line are fine.</p>
         <p class="status" id="parseStatus"></p>
       </div>
     </div>
@@ -301,14 +319,22 @@
           <label><input type="radio" name="pace" id="paceSwift" value="swift"><span>Quick</span></label>
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="hatches"> Now and then, type the answer instead</label>
+      <div class="field">
+        <label class="label" for="startWorld">Start in</label>
+        <select id="startWorld">
+          <option value="ocean">The Ocean</option>
+          <option value="volcano">The Volcano</option>
+          <option value="space">Deep Space</option>
+          <option value="ice">Ice Caverns</option>
+        </select>
+      </div>
     </div>
     <div class="row">
-      <button class="btn primary" type="submit" id="btnBegin">Begin descent</button>
+      <button class="btn primary" type="submit" id="btnBegin">Begin</button>
       <button class="btn" type="button" id="btnSample">Load sample deck</button>
       <button class="btn" type="button" id="btnClear">Clear</button>
     </div>
-    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer (or drag on the water) · <kbd>1</kbd>–<kbd>4</kbd> or click an answer · <kbd>Space</kbd> go through the opening you're over · <kbd>S</kbd> hint · <kbd>Esc</kbd> pause</p>
+    <p class="keys"><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> steer (or drag) · <kbd>1</kbd>–<kbd>4</kbd> or click an answer · <kbd>T</kbd> / <kbd>F</kbd> for true or false · <kbd>Space</kbd> go through the opening you're over · <kbd>S</kbd> hint · <kbd>Esc</kbd> pause</p>
   </form>
 </div>
 
@@ -319,8 +345,8 @@
     <h2>Paused</h2>
     <p class="help">Take your time.</p>
     <div class="row">
-      <button class="btn primary" type="button" id="btnResume">Resume dive</button>
-      <button class="btn" type="button" id="btnAbort">Surface to dive plan</button>
+      <button class="btn primary" type="button" id="btnResume">Resume</button>
+      <button class="btn" type="button" id="btnAbort">Back to the dive plan</button>
     </div>
   </div>
 </div>
@@ -329,27 +355,27 @@
 <div class="overlay" id="end" hidden>
   <div class="sheet">
     <div class="stack">
-      <span class="label">Touchdown</span>
-      <h2>You reached Challenger Deep</h2>
+      <span class="label">Journey complete</span>
+      <h2>Every question answered</h2>
       <p class="help" id="endSub"></p>
     </div>
     <div class="stats">
       <div class="stat"><span class="label">Accuracy</span><span class="val" id="sAcc">0%</span></div>
       <div class="stat"><span class="label">Best streak</span><span class="val" id="sStreak">0</span></div>
-      <div class="stat"><span class="label">Photos</span><span class="val" id="sPhotos">0</span></div>
+      <div class="stat"><span class="label">Worlds</span><span class="val" id="sWorlds">1</span></div>
       <div class="stat"><span class="label">Score</span><span class="val" id="sScore">0</span></div>
     </div>
     <p class="record" id="sRecord"></p>
     <div class="stack">
-      <span class="label" id="bookTitle">Logbook</span>
-      <div class="book" id="book"></div>
+      <span class="label">Worlds you reached</span>
+      <div class="worlds" id="worldList"></div>
     </div>
     <div class="stack">
       <span class="label">Questions to review</span>
       <ul class="log" id="log"></ul>
     </div>
     <div class="row">
-      <button class="btn primary" type="button" id="btnAgain">Dive again</button>
+      <button class="btn primary" type="button" id="btnAgain">Play again</button>
       <button class="btn" type="button" id="btnDrill">Practise the missed ones</button>
       <button class="btn" type="button" id="btnEdit">Edit questions</button>
     </div>
@@ -363,45 +389,51 @@
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const COARSE = matchMedia('(pointer: coarse)').matches;
   const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const TAU = Math.PI * 2;
 
-  const MAX_DEPTH = 10935;
-  const ZONES = [[0, 'Sunlight zone'], [200, 'Twilight zone'], [1000, 'Midnight zone'], [4000, 'Abyssal zone'], [6000, 'Hadal zone']];
-  const WATER = [[0, [27, 111, 143]], [200, [14, 63, 92]], [1000, [7, 31, 51]], [4000, [4, 15, 28]], [MAX_DEPTH, [1, 5, 11]]];
   const PACE = { calm: 22, standard: 15, swift: 10 };
-
-  // Real species, each placed in the depth zone where it lives. zone = index into ZONES.
-  const CREATURES = [
-    { id: 'clownfish', name: 'Clownfish', zone: 0, kind: 'fish', size: 15, body: '#ff8a3d', stripe: '#ffffff', fact: 'Clownfish live among stinging sea anemones, protected by a coat of slimy mucus.' },
-    { id: 'turtle', name: 'Green sea turtle', zone: 0, kind: 'turtle', size: 26, body: '#7aa35f', fact: 'Resting green sea turtles can stay underwater for hours on a single breath.' },
-    { id: 'tang', name: 'Blue tang', zone: 0, kind: 'fish', size: 16, body: '#2f7fe0', tail: '#ffd23f', fact: 'Blue tangs hide a scalpel-sharp spine at the base of their tail.' },
-    { id: 'moonjelly', name: 'Moon jellyfish', zone: 0, kind: 'jelly', size: 17, glow: '220,235,255', fact: 'Moon jellyfish have no brain, no heart and no bones.' },
-    { id: 'lanternfish', name: 'Lanternfish', zone: 1, kind: 'fish', size: 12, body: '#8aa0ab', dots: true, fact: 'Lanternfish make up a huge share of all the fish in the deep sea.' },
-    { id: 'hatchetfish', name: 'Hatchetfish', zone: 1, kind: 'hatchet', size: 13, body: '#c9d6dc', fact: 'Hatchetfish glow on their bellies to erase their own shadow from predators below.' },
-    { id: 'whale', name: 'Sperm whale', zone: 1, kind: 'whale', size: 64, body: '#56636c', fact: 'Sperm whales dive past 2,000 m to hunt squid in total darkness.' },
-    { id: 'angler', name: 'Anglerfish', zone: 2, kind: 'angler', size: 20, body: '#4a3b34', fact: 'An anglerfish lure glows thanks to bacteria living inside it.' },
-    { id: 'vampsquid', name: 'Vampire squid', zone: 2, kind: 'squid', size: 19, body: '#8a2f44', fact: 'Despite the name, vampire squid eat marine snow, not blood.' },
-    { id: 'gulper', name: 'Gulper eel', zone: 2, kind: 'eel', size: 34, body: '#3a3f4c', fact: 'A gulper eel’s huge hinged mouth can swallow prey far bigger than its skinny body suggests.' },
-    { id: 'dumbo', name: 'Dumbo octopus', zone: 3, kind: 'dumbo', size: 18, body: '#f0a8b0', fact: 'Dumbo octopuses flap ear-like fins to glide just above the seafloor.' },
-    { id: 'tripod', name: 'Tripod fish', zone: 3, kind: 'tripod', size: 16, body: '#b9c2c8', fact: 'Tripod fish stand on three stiff fin rays and wait for food to drift into their mouths.' },
-    { id: 'snailfish', name: 'Hadal snailfish', zone: 4, kind: 'fish', size: 15, body: '#f3d9d3', fact: 'Snailfish have been filmed alive more than 8,300 m down, deeper than any other fish.' },
-    { id: 'amphipod', name: 'Supergiant amphipod', zone: 4, kind: 'shrimp', size: 15, body: '#ece3cf', fact: 'Supergiant amphipods scavenge in ocean trenches and can grow longer than your hand.' },
-  ];
+  const WARP_EVERY = 10;
+  const WORLD_ORDER = ['ocean', 'volcano', 'space', 'ice'];
+  const WORLDS = {
+    ocean: { name: 'The Ocean', short: 'Ocean', accent: '111,227,207', flash: '160,230,255' },
+    volcano: { name: 'The Volcano', short: 'Volcano', accent: '255,120,40', flash: '255,150,60' },
+    space: { name: 'Deep Space', short: 'Space', accent: '180,150,255', flash: '220,210,255' },
+    ice: { name: 'Ice Caverns', short: 'Ice', accent: '150,230,255', flash: '220,250,255' },
+  };
+  const LINES = {
+    ocean: [
+      ['Sunlight still reaches this far. Reef fish dart about.', 'Warm, bright water. A turtle might paddle by.'],
+      ['The light fades to blue. Things start to glow down here.', 'Twilight water. Whales hunt far below.'],
+      ['No sunlight reaches this deep. Every light you see is alive.', 'The midnight zone. Your lamp is the brightest thing for miles.'],
+      ['Near-freezing water on the abyssal plain.', 'Soft mud below and very little food.'],
+      ['Deep inside the trench now. Very few people have been here.', 'The hadal zone, named after Hades.'],
+    ],
+    volcano: [['Magma glows through cracks in the rock.', 'The heat shield is holding. Embers drift past the porthole.', 'Rivers of lava pour down the walls.']],
+    space: [['Somehow the bathyscaphe works in space too. Nobody asks how.', 'A comet streaks past. Make a wish.', 'Planets drift by in the dark.']],
+    ice: [['Frozen caverns glitter in the lamplight.', 'Crystals hum faintly in the cold.', 'Snow drifts down through the silent caves.']],
+  };
+  const OCEAN_ZONES = ['Sunlight zone', 'Twilight zone', 'Midnight zone', 'Abyssal zone', 'Hadal zone'];
+  const OCEAN_WATER = [[27, 111, 143], [14, 63, 92], [7, 31, 51], [4, 15, 28], [2, 8, 16]];
+  const TYPE_NAMES = { mc: 'Multiple choice', tf: 'True or false', blank: 'Fill in the blank', type: 'Type the answer' };
 
   const SAMPLE_TOPIC = 'The Deep Ocean';
   const SAMPLE = `Topic: The Deep Ocean
-What is the deepest known point in the ocean? | Challenger Deep | Sirena Deep | Horizon Deep | Milwaukee Deep
-Which trench holds the deepest point on Earth? | Mariana Trench | Tonga Trench | Java Trench | Puerto Rico Trench
-Which zone spans roughly 200 to 1,000 metres down? | Twilight zone | Sunlight zone | Midnight zone | Hadal zone
-What is light made by living organisms called? | Bioluminescence | Phosphorescence | Photosynthesis | Refraction
-Which bathyscaphe first reached Challenger Deep, in 1960? | Trieste | Alvin | Nautilus | Deepsea Challenger
-Roughly how deep is Challenger Deep, in metres? | 10,935 | 8,849 | 6,500 | 12,400
-What are seafloor cracks that spew hot, mineral-rich water? | Hydrothermal vents | Cold seeps | Brine pools | Mud volcanoes
-How do vent bacteria make food without sunlight? | Chemosynthesis | Photosynthesis | Fermentation | Osmosis
-What are the flakes of organic matter that sink from above called? | Marine snow | Sea foam | Plankton bloom | Silt rain
-Who made a solo dive to Challenger Deep in 2012? | James Cameron | Jacques Piccard | Victor Vescovo | Sylvia Earle
-Pressure rises by about how much for every 10 m of seawater? | 1 atmosphere | 10 atmospheres | 0.1 atmosphere | 100 atmospheres
-Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 85% | About 62%`;
+MC | What is the deepest known point in the ocean? | Challenger Deep | Sirena Deep | Horizon Deep | Milwaukee Deep
+TF | The Pacific is the largest ocean on Earth. | True
+MC | Which zone spans roughly 200 to 1,000 metres down? | Twilight zone | Sunlight zone | Midnight zone | Hadal zone
+BLANK | Light made by living things is called ___. | Bioluminescence | Phosphorescence | Photosynthesis | Refraction
+TYPE | Which bathyscaphe first reached Challenger Deep, in 1960? | Trieste
+TF | Sunlight reaches the bottom of the Mariana Trench. | False
+MC | How do vent bacteria make food without sunlight? | Chemosynthesis | Photosynthesis | Fermentation | Osmosis
+BLANK | Flakes of organic matter that sink from above are called marine ___. | snow | dust | rain | ash
+TF | An octopus has three hearts. | True
+MC | Who made a solo dive to Challenger Deep in 2012? | James Cameron | Jacques Piccard | Victor Vescovo | Sylvia Earle
+TYPE | Roughly what percentage of Earth's surface is ocean? | 71
+TF | Water pressure goes down as you dive deeper. | False
+MC | Which fish dangles a glowing lure in front of its mouth? | Anglerfish | Viperfish | Gulper eel | Lanternfish
+BLANK | Hot springs on the seafloor are called hydrothermal ___. | vents | geysers | wells | domes`;
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('bathy:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -410,24 +442,37 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
 
   /* ================= Parsing & answer matching ================= */
   const SEPS = ['\t', '|', '::', ' = ', ' -> ', ' → ', ' — ', ' – ', ' - '];
+  const TAGS = { mc: 'mc', tf: 'tf', 't/f': 'tf', truefalse: 'tf', type: 'type', typed: 'type', blank: 'blank', fill: 'blank', fitb: 'blank' };
+  const tfValue = (s) => (/^(true|t|yes)$/i.test(s.trim()) ? 'True' : /^(false|f|no)$/i.test(s.trim()) ? 'False' : null);
   function parseDeck(text) {
     const cards = [], skipped = [];
     let pendingQ = null, topic = '';
     for (const raw of text.split(/\r?\n/)) {
-      let t = raw.replace(/\*\*|__/g, '').trim();
+      let t = raw.replace(/\*\*/g, '').trim();
       if (!t || t.startsWith('```') || t.startsWith('#')) continue;
       t = t.replace(/^(?:[-*•]\s+|\d{1,3}[.)]\s+)/, '');
-      if (/^question\s*\|\s*correct answer/i.test(t)) continue;
+      if (/^(mc\s*\|\s*)?question\s*\|\s*correct answer/i.test(t)) continue;
       let m = t.match(/^topic\s*[:\-]\s*(.+)$/i);
       if (m) { topic = m[1].trim(); continue; }
+      m = t.match(/^(mc|tf|t\/f|truefalse|type|typed|blank|fill|fitb)\s*[|:]\s*(.+)$/i);
+      if (m) {
+        const type = TAGS[m[1].toLowerCase()];
+        const parts = m[2].split('|').map((p) => p.trim()).filter(Boolean);
+        if (parts.length < 2) { skipped.push(t); continue; }
+        const [q, a, ...rest] = parts;
+        if (type === 'tf') {
+          const v = tfValue(a);
+          if (v) cards.push({ type, q, a: v, decoys: [] }); else skipped.push(t);
+        } else if (type === 'type') cards.push({ type, q, a, decoys: [], alts: rest });
+        else cards.push({ type, q, a, decoys: rest });
+        continue;
+      }
       m = t.match(/^(?:q|question)\s*[:.)]\s*(.+)$/i);
       if (m) { pendingQ = m[1].trim(); continue; }
       m = t.match(/^(?:a|answer)\s*[:.)]\s*(.+)$/i);
       if (m) {
-        if (pendingQ) {
-          const [a, ...decoys] = m[1].split('|').map((p) => p.trim()).filter(Boolean);
-          cards.push({ q: pendingQ, a, decoys });
-        } else skipped.push(t);
+        if (pendingQ) { const [a, ...decoys] = m[1].split('|').map((p) => p.trim()).filter(Boolean); cards.push(autoType({ q: pendingQ, a, decoys })); }
+        else skipped.push(t);
         pendingQ = null; continue;
       }
       const sep = SEPS.find((s) => t.includes(s));
@@ -435,17 +480,22 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
         const parts = t.split(sep).map((p) => p.trim()).filter(Boolean);
         if (parts.length >= 2) {
           const [q, a, ...decoys] = sep.startsWith(' ') ? [parts[0], parts.slice(1).join(sep)] : parts;
-          cards.push({ q, a, decoys });
+          cards.push(autoType({ q, a, decoys }));
           pendingQ = null;
           continue;
         }
       }
-      if (pendingQ) { cards.push({ q: pendingQ, a: t, decoys: [] }); pendingQ = null; continue; }
+      if (pendingQ) { cards.push(autoType({ q: pendingQ, a: t, decoys: [] })); pendingQ = null; continue; }
       if (t.endsWith('?')) { pendingQ = t; continue; }
       skipped.push(t);
     }
     if (pendingQ) skipped.push(pendingQ);
     return { cards, skipped, topic };
+  }
+  function autoType(c) {
+    const tf = tfValue(c.a);
+    if (tf && (!c.decoys.length || c.decoys.every((d) => tfValue(d)))) return { ...c, type: 'tf', a: tf, decoys: [] };
+    return { ...c, type: /_{2,}/.test(c.q) ? 'blank' : 'mc' };
   }
 
   function norm(s) {
@@ -459,6 +509,7 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     (ans.match(/\(([^)]*)\)/g) || []).forEach((p) => set.add(norm(p.slice(1, -1))));
     ans.split(/\s*[\/;]\s*|\s+or\s+/i).forEach((p) => set.add(norm(p)));
     set.add(norm(ans.replace(/^(about|around|roughly|approximately)\s+/i, '')));
+    set.add(norm(ans.replace(/%$/, '')));
     set.delete('');
     return [...set];
   }
@@ -472,10 +523,10 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     }
     return prev[b.length];
   }
-  function matches(typed, ans) {
-    const t = norm(typed);
+  function matches(typed, card) {
+    const t = norm(typed).replace(/%$/, '').trim();
     if (!t) return false;
-    return variants(ans).some((v) => {
+    return [card.a, ...(card.alts || [])].flatMap(variants).some((v) => {
       if (v === t) return true;
       const numeric = /^[\d.\s%]+$/.test(v);
       const tol = numeric || v.length <= 4 ? 0 : v.length <= 8 ? 1 : Math.floor(v.length * 0.18);
@@ -526,6 +577,7 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     return out;
   }
   function buildOptions(card) {
+    if (card.type === 'tf') return { options: ['True', 'False'], correctIdx: card.a === 'True' ? 0 : 1 };
     const seen = new Set([norm(card.a)]);
     const opts = [card.a];
     for (const d of card.decoys) {
@@ -545,105 +597,78 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
 
   /* ================= Game state ================= */
   const S = {
-    mode: 'setup', ev: null, topic: SAMPLE_TOPIC, pace: 'standard', hatches: false, muted: store.get('muted', false),
+    mode: 'setup', ev: null, topic: SAMPLE_TOPIC, pace: 'standard', muted: store.get('muted', false),
     deck: [], queue: [], answerPool: [], lastCards: [], fullCards: [],
     total: 0, mastered: 0, attempts: 0, correct: 0, qNum: 0, missed: new Map(),
     streak: 0, best: 0, score: 0, sonar: 2,
-    depthTarget: 0, depthShown: 0,
-    x: 0, autoX: null, scroll: 20,
-    seen: new Set(store.get('logbook', [])), photosThisDive: new Set(), newThisDive: new Set(),
+    world: 'ocean', worldProg: 0, visited: new Set(['ocean']), pendingWarp: false, startWorld: 'ocean',
+    x: 0, vx: 0, autoX: null, scroll: 20, travel: 0,
   };
-  let time = 0, shake = 0, toastTimer = 0, factTimer = 0, camFlash = 0;
-  let critters = [], snow = [], bubbles = [], shoals = [];
+  let time = 0, shake = 0, toastTimer = 0, flash = 0, flashRGB = '255,255,255', propT = 0, trailT = 0;
+  let props = [], dust = [], stars = [], bubbles = [], sparks = [];
   const keys = new Set();
   const pointer = { active: false, x: 0 };
 
-  const depthFor = (m, t) => MAX_DEPTH * Math.pow(t ? m / t : 0, 1.5);
-  const zoneIndex = (d) => ZONES.reduce((z, cur, i) => (d >= cur[0] ? i : z), 0);
-  const zoneOf = (d) => ZONES[zoneIndex(d)][1];
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   const mult = () => 1 + Math.floor(S.streak / 3) * 0.5;
+  const oceanDepth = () => clamp(S.worldProg / 14, 0, 1);
+  const oceanZone = () => Math.min(4, Math.floor(oceanDepth() * 5));
 
   function startGame(cards, pool) {
     S.fullCards = pool; S.lastCards = cards;
     S.deck = cards.map((c, i) => ({ ...c, id: i }));
-    S.answerPool = pool.flatMap((c) => [c.a, ...c.decoys]);
+    S.answerPool = pool.filter((c) => c.type !== 'tf').flatMap((c) => [c.a, ...c.decoys]);
     S.queue = shuffle([...S.deck]);
-    Object.assign(S, { total: S.deck.length, mastered: 0, attempts: 0, correct: 0, qNum: 0, streak: 0, best: 0, score: 0, sonar: 2, depthTarget: 0, depthShown: 0, x: W / 2, autoX: null });
-    S.missed = new Map(); S.photosThisDive = new Set(); S.newThisDive = new Set();
-    critters = [];
+    Object.assign(S, { total: S.deck.length, mastered: 0, attempts: 0, correct: 0, qNum: 0, streak: 0, best: 0, score: 0, sonar: 2, x: W / 2, autoX: null, pendingWarp: false });
+    S.missed = new Map();
+    setWorld(S.startWorld);
+    S.visited = new Set([S.world]);
     S.mode = 'play';
     $('expName').textContent = 'Expedition · ' + S.topic;
-    ['setup', 'end', 'pause', 'fact'].forEach((id) => { $(id).hidden = true; });
+    ['setup', 'end', 'pause', 'warp'].forEach((id) => { $(id).hidden = true; });
     renderHud(true);
     startCruise('first');
   }
+  function setWorld(id) {
+    S.world = id; S.worldProg = 0;
+    props = []; bubbles = []; sparks = [];
+    seedDust();
+    for (let i = 0; i < 3; i++) { spawnProp(true); }
+  }
 
-  /* ---------- Open water: a short, calm glide between questions ---------- */
+  /* ---------- Cruise: a short glide between questions ---------- */
   function startCruise(kindOf) {
     clearLabels();
     $('hatchForm').hidden = true; $('crash').hidden = true;
-    S.ev = { type: 'cruise', t: 0, len: kindOf === 'first' ? 5.5 : rand(4.5, 5.5), spawned: 0 };
+    S.ev = { type: 'cruise', t: 0, len: kindOf === 'first' ? 3 : rand(2.8, 3.6) };
     S.autoX = null;
-    const z = zoneIndex(S.depthShown);
-    const line = kindOf === 'first'
-      ? (COARSE ? 'Drag on the water to steer. Glide close to a creature to photograph it.' : 'Steer with ← → (or drag). Glide close to a creature to photograph it.')
-      : pickLine(z);
-    setIdle(line);
+    const set = LINES[S.world][S.world === 'ocean' ? oceanZone() : 0];
+    setIdle(kindOf === 'first' ? (COARSE ? 'Drag on the screen to steer. Questions are coming up.' : 'Steer with ← → or drag. Questions are coming up.') : pick(set));
+    $('rType').textContent = '';
     $('rCount').textContent = `${S.mastered}/${S.total} answered`;
-    spawnCritter();
-  }
-  function pickLine(z) {
-    const lines = [
-      ['Sunlight still reaches this far. Reefs and turtles love it here.', 'Warm, bright water. Keep an eye out for bright little fish.'],
-      ['The light is fading to blue. Things start to glow down here.', 'Twilight water. Many animals here rise to the surface each night.'],
-      ['No sunlight reaches this deep. Every light you see is alive.', 'The midnight zone. Your lamp is the brightest thing for miles.'],
-      ['Near-freezing water on the abyssal plain. Life moves slowly here.', 'Soft mud below and not much food. Creatures here are patient.'],
-      ['Deep inside the trench now. Very few people have seen this.', 'The hadal zone, named after Hades. Almost there.'],
-    ][z];
-    return lines[Math.floor(Math.random() * lines.length)];
-  }
-  function spawnCritter() {
-    const z = zoneIndex(S.depthShown);
-    const pool = CREATURES.filter((c) => c.zone === z);
-    const fresh = pool.filter((c) => !S.photosThisDive.has(c.id) && !critters.some((k) => k.c === c));
-    const c = (fresh.length ? fresh : pool)[Math.floor(Math.random() * (fresh.length || pool.length))];
-    if (!c) return;
-    const dir = Math.random() < 0.5 ? 1 : -1;
-    const k = { c, dir, ph: rand(0, 6), snapped: false, vx: 0, vy: 0 };
-    if (c.kind === 'jelly' || c.kind === 'squid' || c.kind === 'dumbo') {
-      k.x = rand(W * 0.2, W * 0.8); k.y = H + 40; k.vx = rand(-12, 12); k.vy = -rand(10, 22);
-    } else {
-      k.x = dir > 0 ? rand(-40, W * 0.25) : rand(W * 0.75, W + 40);
-      k.y = H + 50; k.vx = dir * rand(35, 60); k.vy = 0;
-    }
-    if (c.kind === 'whale') { k.x = dir > 0 ? -80 : W + 80; k.y = H * 0.75; k.vx = dir * 70; }
-    critters.push(k);
   }
 
-  /* ---------- Question shelves ---------- */
+  /* ---------- Question gates ---------- */
   function startShelf() {
-    if (!S.queue.length) { touchdown(); return; }
+    if (!S.queue.length) { finish(); return; }
     const card = S.queue.shift();
     S.qNum++;
-    let hatch = S.hatches && S.qNum % 6 === 0 && norm(card.a).length <= 28;
-    let options = [card.a], correctIdx = 0;
-    if (!hatch) {
-      ({ options, correctIdx } = buildOptions(card));
-      if (options.length < 2) { hatch = true; options = [card.a]; correctIdx = 0; }
-    }
-    const n = options.length;
-    const T = PACE[S.pace] + Math.min(8, card.q.length * 0.035) + (hatch ? PACE[S.pace] * 0.6 : options.join('').length * 0.02);
+    const typed = card.type === 'type';
+    const { options, correctIdx } = typed ? { options: [card.a], correctIdx: 0 } : buildOptions(card);
+    const hatch = typed || options.length < 2;
+    const n = hatch ? 1 : options.length;
+    const base = PACE[S.pace];
+    const T = (card.type === 'tf' ? base * 0.8 : hatch ? base * 1.6 : base) + Math.min(8, card.q.length * 0.035) + (hatch ? 0 : options.join('').length * 0.02);
     S.ev = { type: 'shelf', card, options, correctIdx, n, hatch, T, t: 0, sp: 0, phase: 'approach', closed: new Set(), passT: 0, recoil: 0, hatchOpen: 0, opening: false, chosen: -1, seed: rand(0, 100), crashT: 0 };
     S.autoX = null;
-    setQuestion(card.q, `Question ${S.qNum} · ${S.mastered}/${S.total} answered`);
+    setQuestion(card, `${S.mastered}/${S.total} answered`);
     $('hatchForm').hidden = !hatch;
     if (hatch) {
-      makeLabels([{ text: 'Sealed hatch', cls: 'hatch' }]);
+      makeLabels([{ text: 'Type to open', cls: 'hatch' }]);
       $('hatchInput').value = '';
       setTimeout(() => $('hatchInput').focus({ preventScroll: true }), 30);
     } else {
-      makeLabels(options.map((o, i) => ({ text: o, key: i + 1, onClick: () => chooseLane(i) })));
+      makeLabels(options.map((o, i) => ({ text: o, key: card.type === 'tf' ? o[0] : i + 1, cls: card.type === 'tf' ? 'tf' : '', onClick: () => chooseLane(i) })));
     }
     sfx.ping();
   }
@@ -673,20 +698,20 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
   }
   function impactShelf() {
     const ev = S.ev;
-    const right = ev.hatch ? matches(ev.typed || '', ev.card.a) : ev.chosen === ev.correctIdx;
+    const right = ev.hatch ? matches(ev.typed || '', ev.card) : ev.chosen === ev.correctIdx;
     S.attempts++;
     if (right) {
-      const pts = Math.round((100 + Math.round(60 * Math.max(0, 1 - ev.t / ev.T))) * mult());
-      S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++;
-      S.depthTarget = depthFor(S.mastered, S.total);
+      const pts = Math.round((100 + Math.round(60 * Math.max(0, 1 - ev.t / ev.T)) + (ev.hatch ? 50 : 0)) * mult());
+      S.correct++; S.streak++; S.best = Math.max(S.best, S.streak); S.score += pts; S.mastered++; S.worldProg++;
       let msg = `+${pts}`;
-      if (S.streak >= 3) msg += ` · ${S.streak} in a row`;
+      if (S.streak % WARP_EVERY === 0) { S.pendingWarp = true; msg = `${S.streak} in a row!`; }
+      else if (S.streak >= 3) msg += ` · ${S.streak} in a row`;
       if (S.streak % 3 === 0 && S.sonar < 5) { S.sonar++; msg += ' · +1 hint'; }
       toast(msg);
       if (ev.hatch) ev.opening = true;
       ev.phase = 'pass'; ev.passT = 0;
       sfx.right();
-      burstBubbles();
+      burst();
     } else {
       S.streak = 0;
       S.missed.set(ev.card.id, (S.missed.get(ev.card.id) || 0) + 1);
@@ -694,7 +719,7 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
       shake = RM ? 0 : 6;
       sfx.bonk();
       ev.phase = 'crashed'; ev.crashT = 0;
-      $('crashAns').textContent = ev.card.a;
+      $('crashAns').textContent = ev.card.type === 'blank' ? ev.card.q.replace(/_{2,}/, ev.card.a) : ev.card.a;
       $('crash').hidden = false;
     }
     updateTagClasses();
@@ -709,16 +734,73 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     if (ev.hatch) ev.opening = true;
   }
   function nextAfterAnswer() {
-    if (!S.queue.length) { touchdown(); return; }
+    if (!S.queue.length) { finish(); return; }
+    if (S.pendingWarp) { S.pendingWarp = false; startWarp(); return; }
     startCruise('normal');
   }
-  function touchdown() {
+
+  /* ---------- Warp to a new world ---------- */
+  function startWarp() {
     clearLabels();
-    S.ev = { type: 'floor', t: 0 };
-    S.depthTarget = MAX_DEPTH;
-    setIdle('Touchdown. You are resting on the floor of Challenger Deep, 10,935 m down.');
-    toast('Touchdown at Challenger Deep');
+    const next = WORLD_ORDER[(WORLD_ORDER.indexOf(S.world) + 1) % WORLD_ORDER.length];
+    S.ev = { type: 'warp', t: 0, to: next, switched: false };
+    setIdle(`${S.streak} right in a row. Hold on…`);
+    $('rType').textContent = '';
+    $('warpKicker').textContent = `${S.streak} in a row · now entering`;
+    $('warpTitle').textContent = WORLDS[next].name;
+    sfx.warp();
+  }
+
+  function finish() {
+    clearLabels();
+    S.ev = { type: 'finish', t: 0 };
+    setIdle('That was the last question. Nicely done.');
+    $('rType').textContent = '';
+    toast('All questions answered');
     sfx.win();
+  }
+  function endGame() {
+    S.mode = 'end';
+    clearLabels();
+    ['crash', 'hatchForm', 'warp'].forEach((id) => { $(id).hidden = true; });
+    const retries = S.attempts - S.correct;
+    $('endSub').textContent = `All ${S.total} questions on “${S.topic}” answered` + (retries ? `, with ${retries} ${retries === 1 ? 'retry' : 'retries'} along the way.` : ' without a single miss.');
+    $('sAcc').textContent = (S.attempts ? Math.round((S.correct / S.attempts) * 100) : 0) + '%';
+    $('sStreak').textContent = S.best;
+    $('sWorlds').textContent = `${S.visited.size}/${WORLD_ORDER.length}`;
+    $('sScore').textContent = fmt(S.score);
+    const key = 'best:' + norm(S.topic);
+    const prev = store.get(key, null);
+    if (!prev || S.score > prev.score) { store.set(key, { score: S.score }); $('sRecord').textContent = prev ? 'New best score for this topic.' : ''; }
+    else $('sRecord').textContent = `Your best for this topic: ${fmt(prev.score)} points.`;
+
+    const wl = $('worldList');
+    wl.replaceChildren();
+    for (const id of WORLD_ORDER) {
+      const c = document.createElement('span');
+      c.className = 'world-chip' + (S.visited.has(id) ? ' on' : '');
+      c.textContent = S.visited.has(id) ? WORLDS[id].name : `${WORLDS[id].name} · locked`;
+      wl.append(c);
+    }
+    const log = $('log');
+    log.replaceChildren();
+    const missed = [...S.missed.entries()].sort((a, b) => b[1] - a[1]);
+    if (!missed.length) {
+      const li = document.createElement('li'); li.className = 'clean';
+      li.textContent = 'Nothing to review. You got every question first time.';
+      log.append(li);
+    }
+    for (const [id, count] of missed) {
+      const c = S.deck.find((d) => d.id === id);
+      const li = document.createElement('li');
+      const q = document.createElement('span'); q.className = 'q'; q.textContent = c.q;
+      const a = document.createElement('span'); a.className = 'a'; a.textContent = c.a;
+      const n = document.createElement('span'); n.className = 'n'; n.textContent = `${TYPE_NAMES[c.type]} · missed ${count}×`;
+      li.append(q, a, n); log.append(li);
+    }
+    $('btnDrill').hidden = !missed.length;
+    $('end').hidden = false;
+    renderHud(true);
   }
 
   function useSonar() {
@@ -733,78 +815,17 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     renderHud(true);
   }
 
-  /* ---------- Photographs ---------- */
-  function photograph(k) {
-    k.snapped = true;
-    camFlash = RM ? 0 : 0.6;
-    sfx.shutter();
-    const first = !S.seen.has(k.c.id);
-    const firstThisDive = !S.photosThisDive.has(k.c.id);
-    S.photosThisDive.add(k.c.id);
-    if (first) { S.seen.add(k.c.id); S.newThisDive.add(k.c.id); store.set('logbook', [...S.seen]); }
-    if (firstThisDive) S.score += first ? 100 : 25;
-    $('factTitle').textContent = first ? 'New in your logbook' : 'Photographed again';
-    $('factName').textContent = k.c.name;
-    $('factText').textContent = k.c.fact;
-    $('fact').hidden = false;
-    clearTimeout(factTimer);
-    factTimer = setTimeout(() => { $('fact').hidden = true; }, 5000);
-    renderHud(true);
-  }
-
-  function endGame() {
-    S.mode = 'end';
-    clearLabels();
-    ['crash', 'hatchForm', 'fact'].forEach((id) => { $(id).hidden = true; });
-    const wrongTurns = S.attempts - S.correct;
-    $('endSub').textContent = `All ${S.total} questions on “${S.topic}” answered` + (wrongTurns ? `, with ${wrongTurns} ${wrongTurns === 1 ? 'retry' : 'retries'} along the way.` : ' without a single miss.');
-    $('sAcc').textContent = (S.attempts ? Math.round((S.correct / S.attempts) * 100) : 0) + '%';
-    $('sStreak').textContent = S.best;
-    $('sPhotos').textContent = S.photosThisDive.size;
-    $('sScore').textContent = fmt(S.score);
-
-    const key = 'best:' + norm(S.topic);
-    const prev = store.get(key, null);
-    if (!prev || S.score > prev.score) { store.set(key, { score: S.score }); $('sRecord').textContent = prev ? 'New best score for this topic.' : ''; }
-    else $('sRecord').textContent = `Your best for this topic: ${fmt(prev.score)} points.`;
-
-    $('bookTitle').textContent = `Logbook · ${S.seen.size} of ${CREATURES.length} species`;
-    const book = $('book');
-    book.replaceChildren();
-    for (const c of CREATURES) {
-      const e = document.createElement('div');
-      const known = S.seen.has(c.id), isNew = S.newThisDive.has(c.id);
-      e.className = 'entry' + (known ? '' : ' locked') + (isNew ? ' new' : '');
-      const n = document.createElement('span'); n.className = 'n'; n.textContent = known ? c.name : 'Not yet seen';
-      const z = document.createElement('span'); z.className = 'z'; z.textContent = isNew ? 'New this dive' : ZONES[c.zone][1];
-      e.append(n, z); book.append(e);
-    }
-
-    const log = $('log');
-    log.replaceChildren();
-    const missed = [...S.missed.entries()].sort((a, b) => b[1] - a[1]);
-    if (!missed.length) {
-      const li = document.createElement('li'); li.className = 'clean';
-      li.textContent = 'Nothing to review. You got every question first time.';
-      log.append(li);
-    }
-    for (const [id, count] of missed) {
-      const c = S.deck.find((d) => d.id === id);
-      const li = document.createElement('li');
-      const q = document.createElement('span'); q.className = 'q'; q.textContent = c.q;
-      const a = document.createElement('span'); a.className = 'a'; a.textContent = c.a;
-      const n = document.createElement('span'); n.className = 'n'; n.textContent = `Missed ${count}×`;
-      li.append(q, a, n); log.append(li);
-    }
-    $('btnDrill').hidden = !missed.length;
-    $('end').hidden = false;
-    renderHud(true);
-  }
-
   /* ================= DOM helpers ================= */
-  function setQuestion(text, count) {
+  function setQuestion(card, count) {
     const q = $('rQuestion');
-    q.textContent = text; q.className = 'question';
+    q.className = 'question';
+    q.replaceChildren();
+    const parts = card.q.split(/_{2,}/);
+    parts.forEach((p, i) => {
+      q.append(document.createTextNode(p));
+      if (i < parts.length - 1) { const b = document.createElement('span'); b.className = 'blank'; b.innerHTML = '&nbsp;'; q.append(b); }
+    });
+    $('rType').textContent = TYPE_NAMES[card.type] + ' · ';
     $('rCount').textContent = count;
   }
   function setIdle(text) {
@@ -843,21 +864,24 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     el.style.transform = `translate(${x - w / 2}px, ${y}px) translateY(-50%)`;
     el.style.opacity = alpha;
   }
+  const pipsEl = $('gPips');
+  for (let i = 0; i < WARP_EVERY; i++) pipsEl.append(document.createElement('i'));
   let hudKey = '';
   function renderHud(force) {
-    const d = S.depthShown;
-    const key = [Math.round(d), S.streak, S.score, S.sonar, S.seen.size, S.mode].join('|');
+    const key = [S.world, S.mastered, S.total, S.streak, S.score, S.sonar, S.mode, S.worldProg].join('|');
     if (!force && key === hudKey) return;
     hudKey = key;
-    $('gDepth').textContent = fmt(d) + ' m';
-    $('gPress').textContent = fmt(1 + d / 10.06) + ' atm';
-    $('gStreak').textContent = S.streak >= 3 ? `${S.streak} · ×${mult()}` : S.streak;
+    $('gWorld').textContent = WORLDS[S.world].short;
+    $('gProg').textContent = `${S.mastered}/${S.total}`;
+    $('gStreak').textContent = S.streak;
+    const filled = S.streak === 0 ? 0 : S.streak % WARP_EVERY === 0 ? WARP_EVERY : S.streak % WARP_EVERY;
+    [...pipsEl.children].forEach((el, i) => el.classList.toggle('on', i < filled));
+    pipsEl.classList.toggle('hot', filled >= 7);
     $('gScore').textContent = fmt(S.score);
-    $('gLog').textContent = `${S.seen.size}/${CREATURES.length}`;
     $('sonarCount').textContent = S.sonar;
     $('btnSonar').disabled = S.mode !== 'play' || S.sonar < 1;
     $('btnPause').disabled = S.mode !== 'play' && S.mode !== 'paused';
-    $('rZone').textContent = zoneOf(d);
+    $('rZone').textContent = S.world === 'ocean' ? `${WORLDS.ocean.name} · ${OCEAN_ZONES[oceanZone()]}` : WORLDS[S.world].name;
   }
   function toast(msg) {
     const t = $('toast');
@@ -896,33 +920,60 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     ping() { tone(1250, 0.45, { gain: 0.035, to: 1180 }); tone(1250, 0.5, { gain: 0.012, to: 1180, delay: 0.38 }); },
     right() { tone(523, 0.16, { type: 'triangle', gain: 0.05 }); tone(784, 0.32, { type: 'triangle', gain: 0.05, delay: 0.09 }); },
     bonk() { noise(0.3, 300, 0.3); tone(180, 0.25, { type: 'triangle', gain: 0.04, to: 120 }); },
-    shutter() { noise(0.06, 5000, 0.12); tone(1600, 0.08, { type: 'square', gain: 0.015, delay: 0.05 }); },
     sonar() { tone(900, 0.9, { gain: 0.04, to: 1500 }); },
+    warp() { tone(200, 1.6, { type: 'sawtooth', gain: 0.03, to: 1600 }); tone(300, 1.6, { gain: 0.04, to: 2400, delay: 0.1 }); [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.4, { type: 'triangle', gain: 0.04, delay: 1 + i * 0.09 })); },
     win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.5, { type: 'triangle', gain: 0.05, delay: i * 0.12 })); },
   };
 
-  /* ================= Canvas: the sea ================= */
+  /* ================= Canvas ================= */
   const cv = $('sea'), ctx = cv.getContext('2d');
-  let W = 1, H = 1, DPR = 1;
+  let W = 1, H = 1, DPR = 1, nebula = null;
   function resize() {
     const r = $('stage').getBoundingClientRect();
     DPR = Math.min(2, window.devicePixelRatio || 1);
     W = Math.max(1, r.width); H = Math.max(1, r.height);
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    const count = Math.min(140, Math.round((W * H) / (RM ? 18000 : 8000)));
-    snow = Array.from({ length: count }, () => ({ x: Math.random() * W, y: Math.random() * H, r: 0.5 + Math.random() * 1.6, v: 0.4 + Math.random() }));
-    S.x = clamp(S.x || W / 2, 30, W - 30);
+    seedDust();
+    buildNebula();
+    S.x = clamp(S.x || W / 2, 40, W - 40);
   }
   new ResizeObserver(resize).observe($('stage'));
 
-  const subY = () => Math.max(64, H * 0.24);
-  const subScale = () => clamp(W / 4 / 140, 0.6, 1);
-  const band = () => Math.max(38, Math.min(56, H * 0.1));
-  const impactY = () => subY() + 22 + band() / 2;
+  function seedDust() {
+    const area = W * H;
+    const n = Math.min(160, Math.round(area / (RM ? 16000 : 7000)));
+    dust = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: rand(0.5, 2), v: rand(0.4, 1.4), ph: rand(0, TAU) }));
+    stars = Array.from({ length: Math.min(260, Math.round(area / 3000)) }, () => {
+      const layer = Math.random();
+      return { x: Math.random() * W, y: Math.random() * H, r: layer < 0.6 ? rand(0.4, 0.9) : layer < 0.9 ? rand(0.9, 1.4) : rand(1.4, 2.2), par: layer < 0.6 ? 0.08 : layer < 0.9 ? 0.2 : 0.45, ph: rand(0, TAU), hue: pick(['255,255,255', '200,220,255', '255,230,200']) };
+    });
+  }
+  function buildNebula() {
+    nebula = document.createElement('canvas');
+    const w = Math.max(1, Math.round(W)), h = Math.max(1, Math.round(H * 1.5));
+    nebula.width = w; nebula.height = h;
+    const n = nebula.getContext('2d');
+    const cols = ['120,70,200', '40,120,200', '200,60,140', '60,180,170'];
+    for (let i = 0; i < 9; i++) {
+      const x = Math.random() * w, y = Math.random() * h, r = rand(0.25, 0.6) * Math.max(w, h * 0.6), c = pick(cols);
+      for (const dy of [-h, 0, h]) {
+        const g = n.createRadialGradient(x, y + dy, 0, x, y + dy, r);
+        g.addColorStop(0, `rgba(${c},0.16)`); g.addColorStop(1, `rgba(${c},0)`);
+        n.fillStyle = g; n.fillRect(0, 0, w, h);
+      }
+    }
+  }
+
+  const subY = () => Math.max(70, H * 0.24);
+  const subScale = () => clamp(W / 4 / 140, 0.62, 1);
+  const band = () => Math.max(40, Math.min(58, H * 0.1));
+  const impactY = () => subY() + 24 + band() / 2;
   const laneX = (i, n) => (i + 0.5) * (W / n);
+  const wallW = () => clamp(W * 0.06, 22, 60);
+  const wobble = (v, s) => (Math.sin(v * 0.011 + s) + Math.sin(v * 0.027 + s * 2.1) * 0.6 + Math.sin(v * 0.063 + s * 3.7) * 0.3) / 1.9;
   function wallY(ev) {
-    const start = H - Math.max(56, Math.min(110, H * 0.2));
+    const start = H - Math.max(60, Math.min(110, H * 0.2));
     const end = impactY();
     switch (ev.phase) {
       case 'approach': return start + (end - start) * Math.min(1, ev.t / ev.T);
@@ -931,19 +982,67 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
       default: return end + ev.recoil;
     }
   }
-  function waterAt(d) {
-    for (let i = 0; i < WATER.length - 1; i++) {
-      const [d0, c0] = WATER[i], [d1, c1] = WATER[i + 1];
-      if (d <= d1) { const k = (d - d0) / (d1 - d0); return c0.map((v, j) => Math.round(v + (c1[j] - v) * k)); }
-    }
-    return WATER[WATER.length - 1][1];
-  }
+  const lerpRGB = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
   const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-  const jag = (x, s) => Math.sin(x * 0.045 + s) * 4 + Math.sin(x * 0.12 + s * 1.7) * 2.5;
+  function glow(x, y, r, col, a) {
+    if (r <= 0) return;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
 
-  function burstBubbles() {
+  function burst() {
     if (RM) return;
-    for (let i = 0; i < 22; i++) bubbles.push({ x: S.x + rand(-20, 20), y: subY() + rand(-10, 10), r: rand(1.5, 5), vy: rand(60, 160), vx: rand(-15, 15), life: 1.4 });
+    const col = S.world === 'volcano' ? '255,170,80' : S.world === 'space' ? '200,190,255' : null;
+    for (let i = 0; i < 24; i++) {
+      if (col) sparks.push({ x: S.x + rand(-20, 20), y: subY() + rand(-8, 8), vx: rand(-120, 120), vy: rand(-160, 40), life: rand(0.5, 1), c: col });
+      else bubbles.push({ x: S.x + rand(-20, 20), y: subY() + rand(-10, 10), r: rand(1.5, 5), vy: rand(60, 160), vx: rand(-15, 15), life: 1.4 });
+    }
+  }
+
+  /* ---------- Scenery: what drifts past in each world ---------- */
+  const OCEAN_LIFE = [
+    ['clown', 'tang', 'yellowtang', 'turtle', 'moonjelly'],
+    ['lantern', 'whale', 'moonjelly', 'hatchet'],
+    ['angler', 'atolla', 'vampire', 'lantern'],
+    ['dumbo', 'gulper', 'atolla'],
+    ['snail', 'amphipod', 'dumbo'],
+  ];
+  function spawnProp(initial) {
+    const y0 = initial ? rand(H * 0.3, H) : H + 60;
+    const side = Math.random() < 0.5 ? -1 : 1;
+    if (S.world === 'ocean') {
+      const kind = pick(OCEAN_LIFE[oceanZone()]);
+      const drift = ['moonjelly', 'atolla', 'vampire', 'dumbo'].includes(kind);
+      const size = { clown: 13, tang: 15, yellowtang: 13, turtle: 26, moonjelly: 16, lantern: 10, whale: 70, hatchet: 11, angler: 18, atolla: 15, vampire: 16, dumbo: 16, gulper: 30, snail: 14, amphipod: 13 }[kind];
+      const edgeX = side < 0 ? rand(-30, W * 0.3) : rand(W * 0.7, W + 30);
+      props.push({ kind, x: drift ? rand(W * 0.1, W * 0.9) : edgeX, y: kind === 'whale' ? rand(H * 0.55, H * 0.85) : y0, dir: -side, vx: drift ? rand(-8, 8) : -side * rand(20, 40) * (kind === 'whale' ? 1.6 : 1), vy: drift ? -rand(6, 14) : 0, par: kind === 'whale' ? 0.15 : 0.55, s: size, ph: rand(0, TAU) });
+      if (kind === 'whale') props[props.length - 1].x = side < 0 ? W + 150 : -150;
+    } else if (S.world === 'volcano') {
+      const r = Math.random();
+      if (r < 0.45) props.push({ kind: 'lavafall', side, y: y0, len: rand(H * 0.4, H * 0.9), par: 1, ph: rand(0, TAU), x: 0, vx: 0, vy: 0 });
+      else if (r < 0.8) props.push({ kind: 'magma', x: rand(W * 0.1, W * 0.9), y: y0, s: rand(10, 24), par: 0.35, vx: rand(-6, 6), vy: 0, ph: rand(0, TAU), rot: rand(0, TAU), seed: rand(0, 10) });
+      else props.push({ kind: 'pillar', x: rand(W * 0.15, W * 0.85), y: y0 + 100, s: rand(30, 60), par: 0.2, vx: 0, vy: 0, seed: rand(0, 10) });
+    } else if (S.world === 'space') {
+      const r = Math.random();
+      if (r < 0.28) {
+        const pal = pick([['#f3c98b', '#c98a4b', '#8a5a2b'], ['#9ad0ff', '#4a86c8', '#1e3d74'], ['#f5a3a3', '#c95a5a', '#6d2a3a'], ['#c8f0c0', '#6fae8a', '#2f5a4a'], ['#e2d5ff', '#9a86d8', '#4b3d8a']]);
+        const s = rand(24, Math.min(110, W * 0.14));
+        props.push({ kind: 'planet', x: rand(W * 0.1, W * 0.9), y: H + s + 20, s, par: 0.12, vx: rand(-4, 4), vy: 0, pal, ring: Math.random() < 0.45, tilt: rand(-0.5, 0.5), ph: rand(0, TAU) });
+      } else if (r < 0.62) {
+        const fromLeft = Math.random() < 0.5;
+        props.push({ kind: 'comet', x: fromLeft ? -40 : W + 40, y: rand(0, H * 0.7), vx: (fromLeft ? 1 : -1) * rand(220, 340), vy: rand(60, 140), par: 0, s: rand(2.5, 4), hue: pick(['180,230,255', '255,220,170', '200,255,230']) });
+      } else if (r < 0.9) {
+        props.push({ kind: 'asteroid', x: rand(0, W), y: y0, s: rand(5, 13), par: 0.3, vx: rand(-10, 10), vy: 0, rot: rand(0, TAU), spin: rand(-1, 1), seed: rand(0, 10) });
+      } else {
+        props.push({ kind: 'satellite', x: side < 0 ? W + 30 : -30, y: rand(H * 0.4, H * 0.9), vx: -side * 35, vy: 0, par: 0.25, rot: rand(0, TAU), spin: rand(-0.4, 0.4), s: 12 });
+      }
+    } else if (S.world === 'ice') {
+      const r = Math.random();
+      if (r < 0.55) props.push({ kind: 'crystal', side, y: y0, s: rand(14, 30), par: 1, n: 3 + Math.floor(Math.random() * 3), seed: rand(0, 10), x: 0, vx: 0, vy: 0 });
+      else if (r < 0.85) props.push({ kind: 'icepillar', x: rand(W * 0.12, W * 0.88), y: y0 + 120, s: rand(24, 50), par: 0.2, vx: 0, vy: 0, seed: rand(0, 10) });
+      else props.push({ kind: 'floe', x: rand(W * 0.1, W * 0.9), y: y0, s: rand(10, 20), par: 0.4, vx: rand(-6, 6), vy: 0, rot: rand(0, TAU), spin: rand(-0.3, 0.3), seed: rand(0, 10) });
+    }
   }
 
   /* ---------- Update ---------- */
@@ -951,17 +1050,14 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     time += dt;
     const ev = S.ev;
     const live = S.mode === 'play' && ev;
-    let scrollTarget = 20;
+    let scrollTarget = 25;
 
     if (live) {
       if (ev.type === 'cruise') {
-        ev.t += dt;
-        scrollTarget = 70;
-        if (ev.spawned === 0 && ev.t > 1.8 && Math.random() < 0.5) { ev.spawned = 1; spawnCritter(); }
-        if (ev.t > 1.8) ev.spawned = 1;
+        ev.t += dt; scrollTarget = 90;
         if (ev.t >= ev.len) startShelf();
       } else if (ev.type === 'shelf') {
-        scrollTarget = ev.phase === 'pass' ? 380 : ev.phase === 'crashed' ? 0 : 25;
+        scrollTarget = ev.phase === 'pass' ? 380 : ev.phase === 'crashed' ? 0 : 30;
         if (ev.phase === 'approach') {
           ev.t += dt;
           if (ev.t >= ev.T) { if (ev.hatch) submitHatch(); else chooseLane(laneUnderSub(ev)); }
@@ -981,344 +1077,697 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
         } else if (ev.phase === 'recover') {
           const tx = ev.hatch ? W / 2 : laneX(ev.correctIdx, ev.n);
           ev.recoil += (0 - ev.recoil) * Math.min(1, dt * 5);
-          if (Math.abs(S.x - tx) < 4 && ev.recoil < 2 && (!ev.hatch || ev.hatchOpen > 0.95)) { ev.phase = 'pass'; ev.passT = 0; burstBubbles(); }
+          if (Math.abs(S.x - tx) < 4 && ev.recoil < 2 && (!ev.hatch || ev.hatchOpen > 0.95)) { ev.phase = 'pass'; ev.passT = 0; burst(); }
         }
         if (ev.opening) ev.hatchOpen = Math.min(1, ev.hatchOpen + dt * 5);
-      } else if (ev.type === 'floor') {
-        ev.t += dt; scrollTarget = Math.max(0, 50 - ev.t * 30);
-        if (ev.t >= 3) endGame();
+      } else if (ev.type === 'warp') {
+        ev.t += dt;
+        scrollTarget = ev.t < 1 ? 1400 : 90;
+        flash = ev.t < 1 ? ev.t : Math.max(0, 1 - (ev.t - 1) / 0.9);
+        flashRGB = WORLDS[ev.switched ? ev.to : S.world].flash;
+        if (ev.t > 0.35 && $('warp').hidden) $('warp').hidden = false;
+        if (!ev.switched && ev.t >= 1) { ev.switched = true; setWorld(ev.to); S.visited.add(ev.to); renderHud(true); }
+        if (ev.t >= 3) { $('warp').hidden = true; flash = 0; startCruise('normal'); }
+      } else if (ev.type === 'finish') {
+        ev.t += dt; scrollTarget = Math.max(0, 60 - ev.t * 30);
+        if (ev.t >= 2.2) endGame();
       }
     }
-    S.scroll += (scrollTarget - S.scroll) * Math.min(1, dt * 2.5);
+    S.scroll += (scrollTarget - S.scroll) * Math.min(1, dt * (live && ev.type === 'warp' ? 4 : 2.5));
+    S.travel += S.scroll * dt;
 
-    // steering: gentle, eased movement
+    // steering: eased, with a little tilt
     const forced = live && ev.type === 'shelf' && ['surge', 'pass', 'recover'].includes(ev.phase);
     const frozen = live && ev.type === 'shelf' && ev.phase === 'crashed';
     const steerKeys = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
     if (!forced && (steerKeys || pointer.active)) S.autoX = null;
     const tgt = forced ? S.autoX : pointer.active ? pointer.x : S.autoX;
     let vx;
-    if (!live) vx = (W / 2 - S.x) * 1.5;
+    if (!live || ev.type === 'warp') vx = (W / 2 - S.x) * 1.5;
     else if (frozen) vx = 0;
     else if (tgt != null) vx = clamp((tgt - S.x) * 6, -420, 420);
     else vx = steerKeys * 320;
-    const edge = 38 * subScale();
-    S.x = clamp(S.x + vx * dt, edge, W - edge);
+    S.vx += (vx - S.vx) * Math.min(1, dt * 8);
+    const edge = 40 * subScale() + (S.world === 'volcano' || S.world === 'ice' ? wallW() * 0.6 : 0);
+    S.x = clamp(S.x + S.vx * dt, edge, W - edge);
 
-    S.depthShown += (S.depthTarget - S.depthShown) * Math.min(1, dt * 1.8);
     shake = Math.max(0, shake - dt * 30);
-    camFlash = Math.max(0, camFlash - dt * 2.5);
 
-    // creatures drift past; glide near one to photograph it
-    const sy = subY();
-    for (const k of critters) {
-      k.x += k.vx * dt;
-      k.y += (k.vy - S.scroll * (k.c.kind === 'whale' ? 0.4 : 1)) * dt;
-      if (live && !k.snapped && Math.hypot(S.x - k.x, sy + 20 - k.y) < 80 + k.c.size) photograph(k);
+    // scenery
+    propT -= dt;
+    if (propT <= 0) { spawnProp(false); propT = S.world === 'space' ? rand(1.2, 2.4) : S.world === 'ocean' ? rand(1.6, 3) : rand(0.9, 1.8); }
+    for (const p of props) {
+      p.x += p.vx * dt; p.y += (p.vy - S.scroll * p.par) * dt;
+      if (p.spin) p.rot += p.spin * dt;
     }
-    critters = critters.filter((k) => k.y > -120 && k.x > -200 && k.x < W + 200);
+    props = props.filter((p) => p.y > -(p.len || 0) - 200 && p.x > -260 && p.x < W + 260);
 
-    // ambient shoals in bright water, purely scenery
-    if (!RM && S.depthShown < 400 && shoals.length < 2 && Math.random() < dt * 0.25) {
-      const dir = Math.random() < 0.5 ? 1 : -1;
-      shoals.push({ x: dir > 0 ? -60 : W + 60, y: H * rand(0.35, 0.9), dir, n: 5 + Math.floor(Math.random() * 5), v: rand(25, 45) });
+    // ambient particles, per world
+    for (const p of dust) {
+      if (S.world === 'ocean') p.y -= (8 + S.scroll) * p.v * dt;
+      else if (S.world === 'volcano') p.y -= (40 * p.v + S.scroll * 0.7) * dt;
+      else if (S.world === 'ice') p.y -= (S.scroll * 0.8 - 26 * p.v) * dt;
+      else p.y -= S.scroll * 0.6 * p.v * dt;
+      p.x += Math.sin(time * 0.7 + p.ph + p.y * 0.01) * (S.world === 'ice' ? 14 : 6) * dt;
+      if (p.y < -6) { p.y = H + 6; p.x = Math.random() * W; }
+      if (p.y > H + 8) { p.y = -6; p.x = Math.random() * W; }
     }
-    for (const f of shoals) { f.x += f.dir * f.v * dt; f.y -= S.scroll * 0.3 * dt; }
-    shoals = shoals.filter((f) => f.x > -140 && f.x < W + 140 && f.y > -40);
+    for (const s of stars) { s.y -= S.scroll * s.par * dt; if (s.y < -3) { s.y = H + 3; s.x = Math.random() * W; } }
 
-    for (const p of snow) {
-      p.y -= (8 + S.scroll) * p.v * dt; p.x += Math.sin(time * 0.6 + p.y * 0.02) * 4 * dt;
-      if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W; }
+    // exhaust trail
+    trailT -= dt;
+    if (!RM && trailT <= 0 && S.mode !== 'setup') {
+      trailT = 0.07;
+      const s = subScale(), tx = S.x - 46 * s, ty = subY() - 1 * s;
+      if (S.world === 'ocean' || S.world === 'ice') bubbles.push({ x: tx, y: ty, r: rand(1, 2.6), vy: rand(20, 50), vx: rand(-25, -8), life: 1.1 });
+      else sparks.push({ x: tx, y: ty, vx: rand(-90, -40), vy: rand(-20, 20), life: rand(0.25, 0.45), c: S.world === 'space' ? '140,200,255' : '255,160,70' });
     }
-    for (const b of bubbles) { b.y -= b.vy * dt; b.x += b.vx * dt; b.life -= dt; }
+    for (const b of bubbles) { b.y -= b.vy * dt + S.scroll * 0.2 * dt; b.x += b.vx * dt; b.life -= dt; }
     bubbles = bubbles.filter((b) => b.life > 0 && b.y > -10);
+    for (const s of sparks) { s.x += s.vx * dt; s.y += s.vy * dt - S.scroll * 0.3 * dt; s.life -= dt; }
+    sparks = sparks.filter((s) => s.life > 0);
   }
 
-  /* ---------- Creature drawings (facing right; flipped by direction) ---------- */
-  function drawCritter(k) {
-    const c = k.c, s = c.size, t = time + k.ph;
-    ctx.save();
-    ctx.translate(k.x, k.y);
-    if (k.dir < 0 && !['jelly', 'squid', 'dumbo'].includes(c.kind)) ctx.scale(-1, 1);
-    const wag = Math.sin(t * 6) * 0.25;
-    const eye = (x, y, r) => { ctx.fillStyle = '#0b0f12'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(x + r * 0.3, y - r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill(); };
-    switch (c.kind) {
-      case 'fish': {
-        ctx.fillStyle = c.tail || c.body;
-        ctx.beginPath(); ctx.moveTo(-s * 0.8, 0); ctx.lineTo(-s * 1.5, -s * 0.55 + wag * s); ctx.lineTo(-s * 1.5, s * 0.55 + wag * s); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = c.body;
-        ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-s * 0.3, -s * 0.45); ctx.quadraticCurveTo(0, -s * 0.95, s * 0.3, -s * 0.45); ctx.fill();
-        if (c.stripe) {
-          ctx.save(); ctx.beginPath(); ctx.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); ctx.clip();
-          ctx.fillStyle = c.stripe; ctx.fillRect(s * 0.3, -s, s * 0.22, s * 2); ctx.fillRect(-s * 0.35, -s, s * 0.26, s * 2);
-          ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1; ctx.strokeRect(s * 0.3, -s, s * 0.22, s * 2); ctx.strokeRect(-s * 0.35, -s, s * 0.26, s * 2);
-          ctx.restore();
+  /* ---------- Drawing: backgrounds ---------- */
+  function drawBackground() {
+    if (S.world === 'ocean') {
+      const d = oceanDepth() * 4, i = Math.min(3, Math.floor(d));
+      const top = lerpRGB(OCEAN_WATER[i], OCEAN_WATER[i + 1], d - i);
+      const d2 = Math.min(4, d + 0.8), i2 = Math.min(3, Math.floor(d2));
+      const bottom = lerpRGB(OCEAN_WATER[i2], OCEAN_WATER[i2 + 1], d2 - i2);
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, rgb(top)); bg.addColorStop(1, rgb(bottom));
+      ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+      const shallow = Math.max(0, 1 - oceanDepth() * 3.5);
+      if (shallow > 0) {
+        ctx.globalCompositeOperation = 'lighter';
+        for (let k = 0; k < 6; k++) {
+          const x = ((k + 0.5) / 6) * W + Math.sin(time * 0.3 + k * 1.3) * 40;
+          const gr = ctx.createLinearGradient(0, 0, 0, H);
+          gr.addColorStop(0, `rgba(190,235,245,${0.08 * shallow})`); gr.addColorStop(1, 'rgba(190,235,245,0)');
+          ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - 16, 0); ctx.lineTo(x + 22, 0); ctx.lineTo(x + 110, H); ctx.lineTo(x - 40, H); ctx.fill();
         }
-        if (c.dots) { ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-s * 0.6 + i * s * 0.3, s * 0.3, 1.6, 0, Math.PI * 2); ctx.fill(); } }
-        eye(s * 0.55, -s * 0.12, Math.max(1.8, s * 0.13));
+        // surface caustics
+        ctx.fillStyle = `rgba(220,245,255,${0.05 * shallow})`;
+        for (let k = 0; k < 14; k++) { const x = (k / 14) * W + Math.sin(time + k) * 10; ctx.beginPath(); ctx.ellipse(x, 10 + Math.sin(time * 1.3 + k) * 4, 30, 5, 0, 0, TAU); ctx.fill(); }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    } else if (S.world === 'volcano') {
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#1c0806'); bg.addColorStop(0.55, '#2a0c06'); bg.addColorStop(1, '#5a1a07');
+      ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+      const pulse = 0.35 + Math.sin(time * 1.4) * 0.07;
+      const g = ctx.createRadialGradient(W / 2, H + 60, 10, W / 2, H + 60, H * 0.95);
+      g.addColorStop(0, `rgba(255,140,40,${pulse})`); g.addColorStop(0.5, `rgba(255,70,20,${pulse * 0.35})`); g.addColorStop(1, 'rgba(255,60,20,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    } else if (S.world === 'space') {
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#04040c'); bg.addColorStop(1, '#0a0820');
+      ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+      if (nebula) {
+        const h = nebula.height, off = (S.travel * 0.05) % h;
+        ctx.drawImage(nebula, 0, -off); ctx.drawImage(nebula, 0, h - off);
+      }
+      for (const s of stars) {
+        const tw = 0.6 + 0.4 * Math.sin(time * 2 + s.ph);
+        ctx.fillStyle = `rgba(${s.hue},${tw})`;
+        const stretch = Math.min(40, S.scroll * s.par * 0.02);
+        if (stretch > 1.5) ctx.fillRect(s.x - s.r / 2, s.y, s.r, stretch * 3); else { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill(); }
+      }
+    } else {
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0e3346'); bg.addColorStop(0.6, '#092434'); bg.addColorStop(1, '#061925');
+      ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 3; k++) {                                                 // aurora-like light seeping through the ice
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 20) { const y = H * (0.12 + k * 0.07) + Math.sin(x * 0.006 + time * 0.4 + k * 2) * 26; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.strokeStyle = `rgba(${k === 1 ? '120,255,200' : '120,200,255'},0.07)`; ctx.lineWidth = 30; ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  function drawDust() {
+    if (S.world === 'space') return;
+    if (S.world === 'volcano') {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const p of dust) {
+        const f = 0.5 + 0.5 * Math.sin(time * 6 + p.ph);
+        ctx.fillStyle = `rgba(255,${120 + Math.round(80 * f)},40,${0.5 + 0.4 * f})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 0.9, 0, TAU); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      return;
+    }
+    ctx.fillStyle = S.world === 'ice' ? 'rgba(240,250,255,.8)' : 'rgba(225,238,242,.5)';
+    for (const p of dust) { ctx.beginPath(); ctx.arc(p.x, p.y, S.world === 'ice' ? p.r * 1.2 : p.r, 0, TAU); ctx.fill(); }
+  }
+
+  function drawSideWalls() {
+    if (S.world !== 'volcano' && S.world !== 'ice') return;
+    const ww = wallW(), volcano = S.world === 'volcano';
+    for (const side of [-1, 1]) {
+      const edgeAt = (y) => ww * (1 + 0.5 * wobble(y + S.travel, side * 3));
+      ctx.beginPath();
+      ctx.moveTo(side < 0 ? 0 : W, -20);
+      for (let y = -20; y <= H + 20; y += 10) { const e = edgeAt(y); ctx.lineTo(side < 0 ? e : W - e, y); }
+      ctx.lineTo(side < 0 ? 0 : W, H + 20); ctx.closePath();
+      const g = ctx.createLinearGradient(side < 0 ? 0 : W, 0, side < 0 ? ww * 1.6 : W - ww * 1.6, 0);
+      if (volcano) { g.addColorStop(0, '#120806'); g.addColorStop(1, '#3a2019'); }
+      else { g.addColorStop(0, '#9fd3e8'); g.addColorStop(0.6, '#cdeefa'); g.addColorStop(1, '#eafaff'); }
+      ctx.fillStyle = g; ctx.fill();
+      // bright edge: molten veins or frost
+      ctx.globalCompositeOperation = volcano ? 'lighter' : 'source-over';
+      ctx.beginPath();
+      for (let y = -20; y <= H + 20; y += 10) { const e = edgeAt(y) - 3; y === -20 ? ctx.moveTo(side < 0 ? e : W - e, y) : ctx.lineTo(side < 0 ? e : W - e, y); }
+      ctx.strokeStyle = volcano ? `rgba(255,${110 + Math.round(40 * Math.sin(time * 2))},30,.75)` : 'rgba(255,255,255,.8)';
+      ctx.lineWidth = volcano ? 2.5 : 2; ctx.stroke();
+      if (volcano) {
+        ctx.beginPath();
+        for (let y = -20; y <= H + 20; y += 14) { const e = edgeAt(y) * 0.45 + Math.sin((y + S.travel) * 0.05) * 4; y === -20 ? ctx.moveTo(side < 0 ? e : W - e, y) : ctx.lineTo(side < 0 ? e : W - e, y); }
+        ctx.strokeStyle = 'rgba(255,90,20,.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  /* ---------- Drawing: props ---------- */
+  function drawProp(p) {
+    switch (p.kind) {
+      case 'lavafall': {
+        const e = wallW() * 0.9, x = p.side < 0 ? e : W - e;
+        ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createLinearGradient(0, p.y, 0, p.y + p.len);
+        g.addColorStop(0, 'rgba(255,220,120,.9)'); g.addColorStop(0.5, 'rgba(255,120,30,.8)'); g.addColorStop(1, 'rgba(255,60,20,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        for (let t = 0; t <= 1.001; t += 0.05) { const y = p.y + t * p.len, w = 5 + Math.sin(t * 9 + time * 5 + p.ph) * 2; ctx.lineTo(x - w * p.side + Math.sin(t * 6 + time * 3) * 2, y); }
+        for (let t = 1; t >= 0; t -= 0.05) { const y = p.y + t * p.len; ctx.lineTo(x + Math.sin(t * 6 + time * 3) * 2, y); }
+        ctx.fill();
+        glow(x, p.y + p.len * 0.3, 60, '255,100,30', 0.18);
+        ctx.globalCompositeOperation = 'source-over';
         break;
       }
+      case 'magma': {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot + time * 0.1);
+        const mg = ctx.createRadialGradient(-p.s * 0.3, -p.s * 0.3, 1, 0, 0, p.s * 1.1);
+        mg.addColorStop(0, '#8a4a30'); mg.addColorStop(0.6, '#4a2519'); mg.addColorStop(1, '#2a120b');
+        ctx.fillStyle = mg; ctx.globalAlpha = 0.95;
+        ctx.beginPath();
+        for (let k = 0; k < 8; k++) { const a = (k / 8) * TAU, r = p.s * (0.8 + 0.2 * Math.sin(p.seed * 3 + k * 2.1)); k ? ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+        ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(255,${120 + Math.round(60 * Math.sin(time * 3 + p.ph))},40,.8)`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-p.s * 0.5, -p.s * 0.2); ctx.lineTo(0, p.s * 0.1); ctx.lineTo(p.s * 0.4, -p.s * 0.3); ctx.moveTo(0, p.s * 0.1); ctx.lineTo(p.s * 0.1, p.s * 0.55); ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+        break;
+      }
+      case 'pillar': case 'icepillar': {
+        const ice = p.kind === 'icepillar';
+        ctx.fillStyle = ice ? 'rgba(160,220,240,.12)' : 'rgba(10,3,2,.45)';
+        ctx.beginPath(); ctx.moveTo(p.x - p.s, p.y + 400); ctx.lineTo(p.x - p.s * 0.6, p.y); ctx.lineTo(p.x - p.s * 0.1, p.y - p.s * 1.2); ctx.lineTo(p.x + p.s * 0.5, p.y + 10); ctx.lineTo(p.x + p.s, p.y + 400); ctx.fill();
+        break;
+      }
+      case 'planet': {
+        const { x, y, s, pal } = p;
+        if (p.ring) drawRing(p, true);
+        const g = ctx.createRadialGradient(x - s * 0.35, y - s * 0.35, s * 0.1, x, y, s);
+        g.addColorStop(0, pal[0]); g.addColorStop(0.6, pal[1]); g.addColorStop(1, pal[2]);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, s, 0, TAU); ctx.fill();
+        ctx.save(); ctx.beginPath(); ctx.arc(x, y, s, 0, TAU); ctx.clip();
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.ellipse(x, y + k * s * 0.26 + Math.sin(k + p.ph) * 3, s * 1.1, s * 0.06, 0, 0, TAU); ctx.fill(); }
+        const sh = ctx.createLinearGradient(x - s, y - s, x + s, y + s);
+        sh.addColorStop(0.45, 'rgba(0,0,10,0)'); sh.addColorStop(1, 'rgba(0,0,10,.65)');
+        ctx.fillStyle = sh; ctx.fillRect(x - s, y - s, s * 2, s * 2);
+        ctx.restore();
+        if (p.ring) drawRing(p, false);
+        break;
+      }
+      case 'asteroid': case 'floe': {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        if (p.kind === 'floe') { const fg = ctx.createLinearGradient(-p.s, -p.s, p.s, p.s); fg.addColorStop(0, 'rgba(250,255,255,.9)'); fg.addColorStop(1, 'rgba(140,210,235,.75)'); ctx.fillStyle = fg; }
+        else { const ag = ctx.createRadialGradient(-p.s * 0.3, -p.s * 0.3, 1, 0, 0, p.s); ag.addColorStop(0, '#9a909a'); ag.addColorStop(1, '#4a4450'); ctx.fillStyle = ag; }
+        ctx.beginPath();
+        for (let k = 0; k < 7; k++) { const a = (k / 7) * TAU, r = p.s * (0.75 + 0.25 * Math.sin(p.seed * 3 + k * 2.3)); k ? ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.arc(p.s * 0.2, p.s * 0.1, p.s * 0.22, 0, TAU); ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case 'satellite': {
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = '#2d5a9a'; ctx.fillRect(-26, -5, 16, 10); ctx.fillRect(10, -5, 16, 10);
+        ctx.strokeStyle = 'rgba(180,210,255,.4)'; ctx.lineWidth = 0.8;
+        for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 5.3, -5); ctx.lineTo(-26 + k * 5.3, 5); ctx.moveTo(10 + k * 5.3, -5); ctx.lineTo(10 + k * 5.3, 5); ctx.stroke(); }
+        ctx.fillStyle = '#c9cfd6'; ctx.fillRect(-10, -7, 20, 14);
+        ctx.fillStyle = '#e6b84a'; ctx.fillRect(-8, -5, 16, 10);
+        ctx.restore();
+        break;
+      }
+      case 'crystal': {
+        const e = wallW() * 0.8, x = p.side < 0 ? e : W - e;
+        for (let k = 0; k < p.n; k++) {
+          const a = (p.side < 0 ? 0 : Math.PI) + (k - (p.n - 1) / 2) * 0.35 + Math.sin(p.seed + k) * 0.1;
+          const len = p.s * (0.7 + 0.5 * Math.abs(Math.sin(p.seed * 2 + k)));
+          const tx = x + Math.cos(a) * len, ty = p.y + Math.sin(a) * len, nx = -Math.sin(a) * 5, ny = Math.cos(a) * 5;
+          const g = ctx.createLinearGradient(x, p.y, tx, ty);
+          g.addColorStop(0, 'rgba(120,220,255,.9)'); g.addColorStop(1, 'rgba(220,250,255,.95)');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.moveTo(x + nx, p.y + ny); ctx.lineTo(tx, ty); ctx.lineTo(x - nx, p.y - ny); ctx.fill();
+        }
+        break;
+      }
+      default: drawCreature(p);
+    }
+  }
+  function drawRing(p, back) {
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.tilt);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.s * 1.8, p.s * 0.45, 0, back ? Math.PI : 0, back ? TAU : Math.PI);
+    ctx.strokeStyle = back ? 'rgba(230,210,170,.35)' : 'rgba(240,220,180,.7)'; ctx.lineWidth = p.s * 0.12; ctx.stroke();
+    ctx.restore();
+  }
+  function drawPropGlow(p) {
+    if (p.kind === 'comet') {
+      const len = 90, ang = Math.atan2(p.vy, p.vx);
+      const tx = p.x - Math.cos(ang) * len, ty = p.y - Math.sin(ang) * len;
+      const g = ctx.createLinearGradient(p.x, p.y, tx, ty);
+      g.addColorStop(0, `rgba(${p.hue},.9)`); g.addColorStop(1, `rgba(${p.hue},0)`);
+      ctx.strokeStyle = g; ctx.lineWidth = p.s * 1.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(tx, ty); ctx.stroke();
+      glow(p.x, p.y, p.s * 6, p.hue, 0.8);
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, p.s * 0.8, 0, TAU); ctx.fill();
+    } else if (p.kind === 'crystal') {
+      const e = wallW() * 0.8, x = p.side < 0 ? e : W - e;
+      glow(x + p.side * -8, p.y, p.s * 1.8, '120,230,255', 0.22 + 0.08 * Math.sin(time * 2 + p.seed));
+    } else if (p.kind === 'magma') glow(p.x, p.y, p.s * 2.2, '255,110,30', 0.12);
+    else if (p.kind === 'angler') glow(p.x + p.dir * p.s * 1.5, p.y - p.s * 1.15, 22, '180,255,210', 0.75);
+    else if (p.kind === 'atolla') glow(p.x, p.y - p.s * 0.2, p.s * 2.4, '255,70,90', 0.3 + 0.15 * Math.sin(time * 5 + p.ph));
+    else if (p.kind === 'moonjelly' && oceanDepth() > 0.15) glow(p.x, p.y - p.s * 0.2, p.s * 2.2, '160,220,255', 0.18);
+    else if (p.kind === 'lantern' || p.kind === 'hatchet') glow(p.x, p.y + p.s * 0.3, p.s * 1.6, '120,240,255', 0.2);
+    else if (p.kind === 'satellite') { if (Math.sin(time * 4 + p.x) > 0.6) glow(p.x, p.y, 10, '255,80,80', 0.9); }
+  }
+
+  /* ---------- Drawing: sea creatures (facing +x, mirrored by dir) ---------- */
+  function eye(x, y, r) {
+    ctx.fillStyle = '#f5f7f8'; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#0b0f12'; ctx.beginPath(); ctx.arc(x + r * 0.15, y, r * 0.62, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + r * 0.35, y - r * 0.3, r * 0.25, 0, TAU); ctx.fill();
+  }
+  function fishBody(s, top, mid, belly, finCol, wag) {
+    ctx.fillStyle = finCol;
+    ctx.beginPath(); ctx.moveTo(-s * 0.75, 0);
+    ctx.quadraticCurveTo(-s * 1.2, -s * 0.2 + wag * s, -s * 1.5, -s * 0.6 + wag * s);
+    ctx.quadraticCurveTo(-s * 1.3, wag * s, -s * 1.5, s * 0.6 + wag * s);
+    ctx.quadraticCurveTo(-s * 1.2, s * 0.2 + wag * s, -s * 0.75, 0); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-s * 0.4, -s * 0.45); ctx.quadraticCurveTo(-s * 0.1, -s * 1.0, s * 0.35, -s * 0.5); ctx.fill();
+    const g = ctx.createLinearGradient(0, -s * 0.6, 0, s * 0.6);
+    g.addColorStop(0, top); g.addColorStop(0.5, mid); g.addColorStop(1, belly);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(s, 0);
+    ctx.bezierCurveTo(s * 0.7, -s * 0.7, -s * 0.5, -s * 0.62, -s * 0.85, 0);
+    ctx.bezierCurveTo(-s * 0.5, s * 0.62, s * 0.7, s * 0.66, s, 0); ctx.fill();
+  }
+  function fishDetails(s, finCol, wag) {
+    ctx.fillStyle = finCol; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.moveTo(s * 0.2, s * 0.15); ctx.quadraticCurveTo(-s * 0.1, s * (0.45 + wag * 0.4), -s * 0.2, s * 0.25); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(s * 0.45, 0, s * 0.35, -1, 1); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.ellipse(s * 0.1, -s * 0.28, s * 0.45, s * 0.08, -0.1, 0, TAU); ctx.fill();
+  }
+  function drawCreature(p) {
+    const s = p.s, t = time + p.ph, wag = Math.sin(t * 6) * 0.12;
+    ctx.save(); ctx.translate(p.x, p.y);
+    const mirror = !['moonjelly', 'atolla', 'vampire', 'dumbo'].includes(p.kind);
+    if (mirror && p.dir < 0) ctx.scale(-1, 1);
+    const dim = S.world === 'ocean' ? 1 - Math.max(0, oceanDepth() - 0.4) * 0.5 : 1;
+    ctx.globalAlpha = dim;
+    switch (p.kind) {
+      case 'clown': {
+        fishBody(s, '#ff7a1a', '#ff9540', '#ffc07a', '#ff7a1a', wag);
+        ctx.save(); ctx.beginPath(); ctx.moveTo(s, 0); ctx.bezierCurveTo(s * 0.7, -s * 0.7, -s * 0.5, -s * 0.62, -s * 0.85, 0); ctx.bezierCurveTo(-s * 0.5, s * 0.62, s * 0.7, s * 0.66, s, 0); ctx.clip();
+        for (const [x, w] of [[s * 0.35, s * 0.2], [-s * 0.3, s * 0.24]]) { ctx.fillStyle = '#141414'; ctx.fillRect(x - 1.2, -s, w + 2.4, s * 2); ctx.fillStyle = '#fff'; ctx.fillRect(x, -s, w, s * 2); }
+        ctx.restore();
+        fishDetails(s, '#e8620f', wag); eye(s * 0.6, -s * 0.12, s * 0.15);
+        break;
+      }
+      case 'tang': fishBody(s, '#1d4fb8', '#2f7fe0', '#6fb2ff', '#ffd23f', wag); ctx.fillStyle = '#0d1f4a'; ctx.beginPath(); ctx.ellipse(-s * 0.1, -s * 0.12, s * 0.5, s * 0.12, 0.15, 0, TAU); ctx.fill(); fishDetails(s, '#1d4fb8', wag); eye(s * 0.6, -s * 0.12, s * 0.15); break;
+      case 'yellowtang': fishBody(s, '#f2c300', '#ffd92e', '#fff08a', '#f2c300', wag); fishDetails(s, '#e0b000', wag); eye(s * 0.6, -s * 0.15, s * 0.14); break;
+      case 'lantern': fishBody(s, '#4a5e6a', '#7f96a3', '#b9c7cf', '#5f7580', wag); ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(-s * 0.6 + i * s * 0.26, s * 0.32, 1.5, 0, TAU); ctx.fill(); } eye(s * 0.6, -s * 0.1, s * 0.22); break;
+      case 'snail': fishBody(s, '#e9c8c0', '#f3d9d3', '#fff0ec', '#e9c8c0', wag * 0.6); ctx.globalAlpha = dim * 0.5; fishDetails(s, '#e9c8c0', wag); ctx.globalAlpha = dim; eye(s * 0.62, -s * 0.12, s * 0.1); break;
       case 'hatchet': {
-        ctx.fillStyle = c.body;
-        ctx.beginPath(); ctx.moveTo(s, -s * 0.2); ctx.lineTo(-s * 0.6, -s * 0.5); ctx.lineTo(-s * 0.9, 0); ctx.lineTo(-s * 0.2, s * 0.9); ctx.lineTo(s * 0.6, s * 0.4); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 1.4, -s * 0.35 + wag * 4); ctx.lineTo(-s * 1.4, s * 0.35 + wag * 4); ctx.fill();
-        ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(-s * 0.3 + i * s * 0.25, s * 0.55 - i * s * 0.08, 1.5, 0, Math.PI * 2); ctx.fill(); }
-        eye(s * 0.55, -s * 0.1, s * 0.2);
+        const g = ctx.createLinearGradient(0, -s * 0.5, 0, s); g.addColorStop(0, '#8fa3ad'); g.addColorStop(1, '#eef5f8');
+        ctx.fillStyle = '#b8c7cf'; ctx.beginPath(); ctx.moveTo(-s * 0.8, 0); ctx.lineTo(-s * 1.3, -s * 0.35 + wag * s); ctx.lineTo(-s * 1.3, s * 0.35 + wag * s); ctx.fill();
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(s, -s * 0.2); ctx.lineTo(-s * 0.6, -s * 0.5); ctx.lineTo(-s * 0.85, 0); ctx.quadraticCurveTo(-s * 0.3, s * 1.0, s * 0.6, s * 0.4); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#9ff3ff'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-s * 0.4 + i * s * 0.22, s * 0.6 - i * s * 0.08, 1.4, 0, TAU); ctx.fill(); }
+        eye(s * 0.55, -s * 0.05, s * 0.24);
         break;
       }
       case 'turtle': {
-        const fl = Math.sin(t * 2.5) * 0.5;
-        ctx.fillStyle = '#9cc27c';
-        [[s * 0.45, -s * 0.5, -0.6 + fl], [s * 0.45, s * 0.5, 0.6 - fl], [-s * 0.55, -s * 0.4, -2.4 - fl * 0.5], [-s * 0.55, s * 0.4, 2.4 + fl * 0.5]].forEach(([x, y, a], i) => {
-          ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(s * (i < 2 ? 0.45 : 0.25), 0, s * (i < 2 ? 0.5 : 0.28), s * 0.14, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        const fl = Math.sin(t * 2.2) * 0.5;
+        ctx.fillStyle = '#8fb872';
+        [[s * 0.45, -s * 0.48, -0.7 + fl, 0.55], [s * 0.45, s * 0.48, 0.7 - fl, 0.55], [-s * 0.55, -s * 0.38, -2.5 - fl * 0.4, 0.3], [-s * 0.55, s * 0.38, 2.5 + fl * 0.4, 0.3]].forEach(([x, y, a, l]) => {
+          ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(s * l, 0, s * l, s * 0.13, 0, 0, TAU); ctx.fill(); ctx.restore();
         });
-        ctx.beginPath(); ctx.ellipse(s * 0.95, 0, s * 0.28, s * 0.22, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = c.body; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.85, s * 0.62, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = 'rgba(40,60,30,.6)'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.ellipse(0, 0, s * 0.45, s * 0.3, 0, 0, Math.PI * 2); ctx.moveTo(-s * 0.85, 0); ctx.lineTo(-s * 0.45, 0); ctx.moveTo(s * 0.45, 0); ctx.lineTo(s * 0.85, 0); ctx.stroke();
-        eye(s * 1.08, -s * 0.07, 2);
+        ctx.fillStyle = '#9cc47f'; ctx.beginPath(); ctx.ellipse(s * 0.98, 0, s * 0.3, s * 0.22, 0, 0, TAU); ctx.fill();
+        const g = ctx.createRadialGradient(-s * 0.2, -s * 0.2, 2, 0, 0, s * 0.9);
+        g.addColorStop(0, '#a58a4f'); g.addColorStop(0.7, '#6f5a2e'); g.addColorStop(1, '#4a3c1e');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, s * 0.85, s * 0.62, 0, 0, TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(240,220,160,.35)'; ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU; ctx.moveTo(Math.cos(a) * s * 0.3, Math.sin(a) * s * 0.22); ctx.lineTo(Math.cos(a) * s * 0.78, Math.sin(a) * s * 0.56); }
+        ctx.ellipse(0, 0, s * 0.3, s * 0.22, 0, 0, TAU); ctx.stroke();
+        eye(s * 1.1, -s * 0.06, 2.2);
         break;
       }
       case 'whale': {
-        ctx.fillStyle = c.body;
-        ctx.beginPath(); ctx.moveTo(s * 1.1, -s * 0.35); ctx.quadraticCurveTo(s * 1.25, s * 0.2, s * 0.9, s * 0.35); ctx.lineTo(-s * 0.9, s * 0.18); ctx.quadraticCurveTo(-s * 1.3, 0, -s * 1.4, -s * 0.05); ctx.lineTo(-s * 0.8, -s * 0.3); ctx.quadraticCurveTo(0, -s * 0.5, s * 1.1, -s * 0.35); ctx.fill();
-        ctx.save(); ctx.translate(-s * 1.4, -s * 0.05); ctx.rotate(wag * 0.5);
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-s * 0.2, -s * 0.35, -s * 0.4, -s * 0.3); ctx.quadraticCurveTo(-s * 0.2, 0, -s * 0.4, s * 0.3); ctx.quadraticCurveTo(-s * 0.2, s * 0.35, 0, 0); ctx.fill(); ctx.restore();
-        ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(s * 0.2, s * 0.32, s * 0.25, s * 0.06, 0.3, 0, Math.PI * 2); ctx.fill();
-        eye(s * 0.7, s * 0.05, 2.5);
+        const g = ctx.createLinearGradient(0, -s * 0.45, 0, s * 0.4);
+        g.addColorStop(0, '#3e4a54'); g.addColorStop(0.7, '#5b6872'); g.addColorStop(1, '#8a98a2');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(s * 1.15, -s * 0.3); ctx.quadraticCurveTo(s * 1.3, s * 0.2, s * 0.9, s * 0.34); ctx.lineTo(-s * 0.9, s * 0.16); ctx.quadraticCurveTo(-s * 1.3, 0, -s * 1.42, -s * 0.04); ctx.lineTo(-s * 0.8, -s * 0.3); ctx.quadraticCurveTo(0, -s * 0.52, s * 1.15, -s * 0.3); ctx.fill();
+        ctx.save(); ctx.translate(-s * 1.42, -s * 0.04); ctx.rotate(Math.sin(t * 1.5) * 0.25);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-s * 0.2, -s * 0.36, -s * 0.44, -s * 0.3); ctx.quadraticCurveTo(-s * 0.2, 0, -s * 0.44, s * 0.3); ctx.quadraticCurveTo(-s * 0.2, s * 0.36, 0, 0); ctx.fill(); ctx.restore();
+        ctx.fillStyle = '#3e4a54'; ctx.beginPath(); ctx.ellipse(s * 0.2, s * 0.3, s * 0.22, s * 0.06, 0.4, 0, TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(s * 0.9 - k * s * 0.3, s * 0.2); ctx.lineTo(s * 0.7 - k * s * 0.3, s * 0.3); ctx.stroke(); }
+        eye(s * 0.72, s * 0.04, 2.6);
         break;
       }
       case 'angler': {
-        ctx.fillStyle = c.body;
-        ctx.beginPath(); ctx.ellipse(0, 0, s * 1.05, s * 0.8, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 1.6, -s * 0.5 + wag * 5); ctx.lineTo(-s * 1.6, s * 0.5 + wag * 5); ctx.fill();
-        ctx.fillStyle = '#140d0a'; ctx.beginPath(); ctx.moveTo(s * 1.05, -s * 0.05); ctx.lineTo(s * 0.35, s * 0.15); ctx.lineTo(s * 0.95, s * 0.55); ctx.fill();
-        ctx.fillStyle = '#f2ede4'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(s * 0.5 + i * s * 0.14, s * 0.12); ctx.lineTo(s * 0.57 + i * s * 0.14, s * 0.32); ctx.lineTo(s * 0.64 + i * s * 0.14, s * 0.12); ctx.fill(); }
-        ctx.strokeStyle = c.body; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s * 0.3, -s * 0.7); ctx.quadraticCurveTo(s * 0.9, -s * 1.7, s * 1.5, -s * 1.1); ctx.stroke();
-        eye(s * 0.55, -s * 0.3, 2.2);
+        const g = ctx.createRadialGradient(-s * 0.2, -s * 0.3, 2, 0, 0, s * 1.1);
+        g.addColorStop(0, '#6b5446'); g.addColorStop(1, '#2a1d17');
+        ctx.fillStyle = '#3a2a22'; ctx.beginPath(); ctx.moveTo(-s * 0.9, 0); ctx.lineTo(-s * 1.55, -s * 0.5 + wag * s); ctx.lineTo(-s * 1.55, s * 0.5 + wag * s); ctx.fill();
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, s * 1.05, s * 0.82, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#120a07'; ctx.beginPath(); ctx.moveTo(s * 1.05, -s * 0.05); ctx.lineTo(s * 0.3, s * 0.18); ctx.lineTo(s * 0.95, s * 0.58); ctx.fill();
+        ctx.fillStyle = '#f2ede4'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(s * 0.45 + i * s * 0.14, s * 0.13); ctx.lineTo(s * 0.52 + i * s * 0.14, s * 0.36); ctx.lineTo(s * 0.59 + i * s * 0.14, s * 0.13); ctx.fill(); }
+        ctx.strokeStyle = '#4a3a30'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(s * 0.2, -s * 0.72); ctx.quadraticCurveTo(s * 0.9, -s * 1.8, s * 1.5, -s * 1.15); ctx.stroke();
+        ctx.fillStyle = '#eaffef'; ctx.beginPath(); ctx.arc(s * 1.5, -s * 1.15, 2.6, 0, TAU); ctx.fill();
+        eye(s * 0.5, -s * 0.32, 2.4);
         break;
       }
-      case 'eel': {
-        ctx.strokeStyle = c.body; ctx.lineCap = 'round';
+      case 'gulper': {
+        ctx.lineCap = 'round';
         let px = 0, py = 0;
-        for (let i = 1; i <= 16; i++) {
-          const x = -i * s * 0.12, y = Math.sin(t * 3 - i * 0.5) * s * 0.12 * (i / 16) * 2;
-          ctx.lineWidth = Math.max(1.5, s * 0.22 * (1 - i / 18)); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke(); px = x; py = y;
+        for (let i = 1; i <= 18; i++) {
+          const x = -i * s * 0.11, y = Math.sin(t * 3 - i * 0.5) * s * 0.2 * (i / 18);
+          ctx.strokeStyle = '#2e3340'; ctx.lineWidth = Math.max(1.3, s * 0.22 * (1 - i / 20));
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(x, y); ctx.stroke(); px = x; py = y;
         }
-        ctx.fillStyle = c.body; ctx.beginPath(); ctx.moveTo(0, -s * 0.12); ctx.lineTo(s * 0.9, -s * 0.35); ctx.lineTo(s * 0.9, s * 0.5 + Math.sin(t * 2) * 3); ctx.lineTo(0, s * 0.12); ctx.fill();
-        ctx.fillStyle = '#ff7aa8'; ctx.beginPath(); ctx.arc(px, py, 2.4, 0, Math.PI * 2); ctx.fill();
-        eye(s * 0.2, -s * 0.12, 1.8);
+        ctx.fillStyle = '#2e3340'; ctx.beginPath(); ctx.moveTo(0, -s * 0.14); ctx.lineTo(s * 0.95, -s * 0.36); ctx.quadraticCurveTo(s * 0.7, s * 0.2, s * 0.95, s * 0.55 + Math.sin(t * 2) * 3); ctx.lineTo(0, s * 0.14); ctx.fill();
+        ctx.fillStyle = '#ff7aa8'; ctx.beginPath(); ctx.arc(px, py, 2.4, 0, TAU); ctx.fill();
+        eye(s * 0.2, -s * 0.13, 2);
         break;
       }
-      case 'tripod': {
-        ctx.strokeStyle = '#d7dee2'; ctx.lineWidth = 1.2;
-        [[-s * 0.6, -0.15], [-s * 0.1, 0], [s * 0.3, 0.15]].forEach(([x, a]) => { ctx.beginPath(); ctx.moveTo(x, s * 0.35); ctx.lineTo(x + Math.sin(a) * s * 1.6, s * 2.1); ctx.stroke(); });
-        ctx.fillStyle = c.body;
-        ctx.beginPath(); ctx.ellipse(0, 0, s * 1.1, s * 0.38, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-s * 1, 0); ctx.lineTo(-s * 1.5, -s * 0.3); ctx.lineTo(-s * 1.5, s * 0.3); ctx.fill();
-        ctx.strokeStyle = c.body; ctx.beginPath(); ctx.moveTo(s * 0.4, -s * 0.3); ctx.lineTo(s * 0.9, -s * 1.3); ctx.stroke();
-        eye(s * 0.75, -s * 0.08, 1.8);
-        break;
-      }
-      case 'shrimp': {
-        ctx.fillStyle = c.body; ctx.strokeStyle = 'rgba(120,100,80,.6)'; ctx.lineWidth = 1;
+      case 'amphipod': {
         for (let i = 0; i < 7; i++) {
           const a = -0.9 + i * 0.3, x = Math.cos(a) * s * 0.9 - s * 0.2, y = Math.sin(a) * s * 0.5 + s * 0.2;
-          ctx.beginPath(); ctx.ellipse(x, y, s * 0.24, s * 0.3, a, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          const g = ctx.createRadialGradient(x - 2, y - 2, 1, x, y, s * 0.35); g.addColorStop(0, '#fff8ea'); g.addColorStop(1, '#cdbf9f');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, s * 0.24, s * 0.3, a, 0, TAU); ctx.fill();
         }
-        ctx.strokeStyle = c.body; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#d8ccb0'; ctx.lineWidth = 1;
         for (let i = 0; i < 5; i++) { const x = -s * 0.4 + i * s * 0.25; ctx.beginPath(); ctx.moveTo(x, s * 0.5); ctx.lineTo(x + Math.sin(t * 8 + i) * 2, s * 0.85); ctx.stroke(); }
         ctx.beginPath(); ctx.moveTo(s * 0.6, -s * 0.2); ctx.quadraticCurveTo(s * 1.3, -s * 0.8, s * 1.6, -s * 0.4); ctx.stroke();
-        eye(s * 0.55, -s * 0.1, 1.6);
+        eye(s * 0.55, -s * 0.1, 1.7);
         break;
       }
-      case 'jelly': case 'squid': case 'dumbo': default: {
-        const pulse = 1 + Math.sin(t * 2) * 0.12;
-        if (c.kind === 'jelly') {
-          ctx.fillStyle = `rgba(${c.glow},.55)`;
-          ctx.beginPath(); ctx.ellipse(0, 0, s * pulse, s * 0.7, 0, Math.PI, 0); ctx.fill();
-          ctx.strokeStyle = `rgba(${c.glow},.8)`; ctx.lineWidth = 1.5;
-          ctx.beginPath(); for (let i = 0; i < 4; i++) ctx.arc(-s * 0.35 + (i % 2) * s * 0.7, -s * 0.3 + Math.floor(i / 2) * s * 0.01, s * 0.15, 0, Math.PI * 2); ctx.stroke();
-          ctx.strokeStyle = `rgba(${c.glow},.45)`; ctx.lineWidth = 1;
-          for (let k2 = -3; k2 <= 3; k2++) { ctx.beginPath(); ctx.moveTo(k2 * s * 0.28, 0); for (let u = 0; u <= 1; u += 0.2) ctx.lineTo(k2 * s * 0.28 + Math.sin(t * 2 + u * 5 + k2) * 3, u * s * 2.2); ctx.stroke(); }
-        } else if (c.kind === 'squid') {
-          ctx.fillStyle = c.body;
-          ctx.beginPath(); ctx.ellipse(0, -s * 0.5, s * 0.55, s * 0.9, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(-s * 0.6, -s * 1.1, s * 0.3, s * 0.16, -0.5 + Math.sin(t * 3) * 0.3, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.ellipse(s * 0.6, -s * 1.1, s * 0.3, s * 0.16, 0.5 - Math.sin(t * 3) * 0.3, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-s * 0.5, s * 0.1); ctx.quadraticCurveTo(0, s * (1.2 + Math.sin(t * 2) * 0.2), s * 0.5, s * 0.1); ctx.fill();
-          ctx.fillStyle = '#9fd7ff'; ctx.beginPath(); ctx.arc(-s * 0.22, -s * 0.2, s * 0.13, 0, Math.PI * 2); ctx.arc(s * 0.22, -s * 0.2, s * 0.13, 0, Math.PI * 2); ctx.fill();
-        } else {
-          const flap = Math.sin(t * 3) * 0.5;
-          ctx.fillStyle = c.body;
-          ctx.save(); ctx.translate(-s * 0.7, -s * 0.35); ctx.rotate(-0.4 + flap); ctx.beginPath(); ctx.ellipse(-s * 0.2, 0, s * 0.35, s * 0.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-          ctx.save(); ctx.translate(s * 0.7, -s * 0.35); ctx.rotate(0.4 - flap); ctx.beginPath(); ctx.ellipse(s * 0.2, 0, s * 0.35, s * 0.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-          ctx.beginPath(); ctx.ellipse(0, -s * 0.25, s * 0.75, s * 0.7 * pulse, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-s * 0.75, -s * 0.1);
-          for (let i = 0; i <= 6; i++) ctx.lineTo(-s * 0.75 + i * s * 0.25, s * (0.6 + (i % 2) * 0.2 + Math.sin(t * 2 + i) * 0.08));
-          ctx.lineTo(s * 0.75, -s * 0.1); ctx.fill();
-          eye(-s * 0.28, -s * 0.3, 2.2); eye(s * 0.28, -s * 0.3, 2.2);
-        }
+      case 'moonjelly': case 'atolla': {
+        const pulse = 1 + Math.sin(t * 2) * 0.1, red = p.kind === 'atolla';
+        const g = ctx.createRadialGradient(0, -s * 0.5, 1, 0, -s * 0.2, s * 1.1);
+        g.addColorStop(0, red ? 'rgba(255,120,130,.85)' : 'rgba(240,248,255,.7)'); g.addColorStop(1, red ? 'rgba(160,20,40,.55)' : 'rgba(170,210,240,.25)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(-s * pulse, 0); ctx.bezierCurveTo(-s * pulse, -s * 1.05, s * pulse, -s * 1.05, s * pulse, 0);
+        for (let k = 6; k >= 0; k--) ctx.lineTo(-s * pulse + (k / 6) * 2 * s * pulse, (k % 2) * 3);
+        ctx.fill();
+        if (!red) { ctx.strokeStyle = 'rgba(200,170,255,.7)'; ctx.lineWidth = 1.6; for (const dx of [-0.35, 0.35]) { ctx.beginPath(); ctx.arc(s * dx, -s * 0.35, s * 0.16, 0, TAU); ctx.stroke(); } }
+        ctx.strokeStyle = red ? 'rgba(255,120,130,.5)' : 'rgba(220,235,255,.45)'; ctx.lineWidth = 1;
+        for (let k = -4; k <= 4; k++) { ctx.beginPath(); ctx.moveTo(k * s * 0.22, 0); for (let u = 0; u <= 1; u += 0.15) ctx.lineTo(k * s * 0.22 + Math.sin(t * 2 + u * 5 + k) * 3, u * s * 2); ctx.stroke(); }
+        break;
+      }
+      case 'vampire': {
+        const g = ctx.createLinearGradient(0, -s * 1.4, 0, s); g.addColorStop(0, '#b0405a'); g.addColorStop(1, '#5a1426');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.ellipse(0, -s * 0.55, s * 0.55, s * 0.9, 0, 0, TAU); ctx.fill();
+        for (const d of [-1, 1]) { ctx.beginPath(); ctx.ellipse(d * s * 0.62, -s * 1.1, s * 0.3, s * 0.15, d * (0.5 - Math.sin(t * 3) * 0.3), 0, TAU); ctx.fill(); }
+        ctx.beginPath(); ctx.moveTo(-s * 0.55, 0); ctx.quadraticCurveTo(-s * 0.7, s * (1 + Math.sin(t * 2) * 0.2), 0, s * 0.9); ctx.quadraticCurveTo(s * 0.7, s * (1 + Math.sin(t * 2) * 0.2), s * 0.55, 0); ctx.fill();
+        ctx.fillStyle = '#9fd7ff'; for (const d of [-1, 1]) { ctx.beginPath(); ctx.arc(d * s * 0.22, -s * 0.2, s * 0.14, 0, TAU); ctx.fill(); }
+        break;
+      }
+      case 'dumbo': default: {
+        const flap = Math.sin(t * 3) * 0.5;
+        const g = ctx.createRadialGradient(-s * 0.2, -s * 0.5, 2, 0, -s * 0.2, s); g.addColorStop(0, '#ffd0d6'); g.addColorStop(1, '#e0808e');
+        ctx.fillStyle = '#f0a0ac';
+        for (const d of [-1, 1]) { ctx.save(); ctx.translate(d * s * 0.7, -s * 0.4); ctx.rotate(d * (0.4 - flap)); ctx.beginPath(); ctx.ellipse(d * s * 0.2, 0, s * 0.36, s * 0.2, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.ellipse(0, -s * 0.25, s * 0.75, s * 0.72, 0, 0, TAU); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-s * 0.75, -s * 0.1);
+        for (let i = 0; i <= 6; i++) ctx.lineTo(-s * 0.75 + i * s * 0.25, s * (0.62 + (i % 2) * 0.2 + Math.sin(t * 2 + i) * 0.08));
+        ctx.lineTo(s * 0.75, -s * 0.1); ctx.fill();
+        eye(-s * 0.28, -s * 0.3, 2.4); eye(s * 0.28, -s * 0.3, 2.4);
       }
     }
     ctx.restore();
   }
 
-  function drawWall(ev, y) {
-    const b = band();
-    const g = ctx.createLinearGradient(0, y - b / 2, 0, y + b / 2);
-    g.addColorStop(0, '#4a5c64'); g.addColorStop(0.35, '#2c3b43'); g.addColorStop(1, '#141e24');
-    const gaps = ev.hatch
-      ? [{ c: W / 2, w: Math.min(W * 0.5, 130), i: 0 }]
-      : ev.options.map((_, i) => ({ c: laneX(i, ev.n), w: Math.min((W / ev.n) * 0.74, 150), i }));
-    const seg = (xa, xb) => {
-      if (xb - xa < 1) return;
-      ctx.beginPath();
-      ctx.moveTo(xa, y - b / 2 + jag(xa, ev.seed));
-      for (let x = xa; x < xb; x += 10) ctx.lineTo(x, y - b / 2 + jag(x, ev.seed));
-      ctx.lineTo(xb, y - b / 2 + jag(xb, ev.seed));
-      ctx.lineTo(xb, y + b / 2 + jag(xb, ev.seed + 7));
-      for (let x = xb; x > xa; x -= 10) ctx.lineTo(x, y + b / 2 + jag(x, ev.seed + 7));
-      ctx.lineTo(xa, y + b / 2 + jag(xa, ev.seed + 7));
-      ctx.closePath();
-      ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
-      // a little life on the ledge: sponges and soft coral along the top edge
-      for (let x = xa + 14; x < xb - 10; x += 38) {
-        const h = 5 + ((x * 7 + ev.seed * 13) % 7);
-        ctx.fillStyle = ((x + ev.seed) % 3 < 1) ? 'rgba(220,120,110,.7)' : 'rgba(230,190,110,.6)';
-        ctx.beginPath(); ctx.ellipse(x, y - b / 2 + jag(x, ev.seed) - h / 2, 3, h / 2 + 1, 0, 0, Math.PI * 2); ctx.fill();
-      }
-    };
+  /* ---------- Drawing: question gate, styled per world ---------- */
+  const jag = (x, s) => Math.sin(x * 0.045 + s) * 4 + Math.sin(x * 0.12 + s * 1.7) * 2.5;
+  function drawGate(ev, y) {
+    const b = band(), world = S.world;
+    const gaps = ev.hatch ? [{ c: W / 2, w: Math.min(W * 0.5, 130), i: 0 }] : ev.options.map((_, i) => ({ c: laneX(i, ev.n), w: Math.min((W / ev.n) * 0.74, 150), i }));
+    const segs = [];
     let x0 = -12;
-    for (const gp of gaps) {
-      if (!ev.hatch && ev.closed.has(gp.i)) continue;
-      seg(x0, gp.c - gp.w / 2);
-      x0 = gp.c + gp.w / 2;
+    for (const gp of gaps) { if (!ev.hatch && ev.closed.has(gp.i)) continue; segs.push([x0, gp.c - gp.w / 2]); x0 = gp.c + gp.w / 2; }
+    segs.push([x0, W + 12]);
+    const straight = world === 'space';
+    const top = (x) => y - b / 2 + (straight ? 0 : jag(x, ev.seed));
+    const bot = (x) => y + b / 2 + (straight ? 0 : jag(x, ev.seed + 7));
+    const g = ctx.createLinearGradient(0, y - b / 2, 0, y + b / 2);
+    if (world === 'ocean') { g.addColorStop(0, '#586c74'); g.addColorStop(0.35, '#34454d'); g.addColorStop(1, '#162026'); }
+    else if (world === 'volcano') { g.addColorStop(0, '#4a3029'); g.addColorStop(0.4, '#2a1a15'); g.addColorStop(1, '#140a07'); }
+    else if (world === 'space') { g.addColorStop(0, '#a9b5c2'); g.addColorStop(0.45, '#5e6b78'); g.addColorStop(1, '#2b333c'); }
+    else { g.addColorStop(0, '#f2fbff'); g.addColorStop(0.45, '#b9e3f2'); g.addColorStop(1, '#6fb3cf'); }
+
+    for (const [xa, xb] of segs) {
+      if (xb - xa < 1) continue;
+      ctx.beginPath(); ctx.moveTo(xa, top(xa));
+      for (let x = xa; x < xb; x += 10) ctx.lineTo(x, top(x));
+      ctx.lineTo(xb, top(xb)); ctx.lineTo(xb, bot(xb));
+      for (let x = xb; x > xa; x -= 10) ctx.lineTo(x, bot(x));
+      ctx.lineTo(xa, bot(xa)); ctx.closePath();
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = world === 'ice' ? 'rgba(255,255,255,.7)' : 'rgba(0,0,0,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      if (world === 'ocean') {                                                   // coral and sponges along the ledge
+        for (let x = xa + 12; x < xb - 8; x += 26) {
+          const h = 5 + ((Math.floor(x) * 7 + Math.floor(ev.seed) * 13) % 9), k = (Math.floor(x / 26) + Math.floor(ev.seed)) % 3;
+          ctx.fillStyle = ['#e0706a', '#f0c060', '#b07ad8'][k];
+          if (k === 2) { ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, top(x)); ctx.lineTo(x - 3, top(x) - h); ctx.moveTo(x, top(x) - h * 0.4); ctx.lineTo(x + 4, top(x) - h * 0.9); ctx.stroke(); }
+          else { ctx.beginPath(); ctx.ellipse(x, top(x) - h / 2, 3.2, h / 2 + 1, 0, 0, TAU); ctx.fill(); }
+        }
+      } else if (world === 'volcano') {                                          // glowing cracks
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(255,${120 + Math.round(50 * Math.sin(time * 3))},40,.9)`; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = xa + 4; x < xb - 4; x += 8) { const yy = y + Math.sin(x * 0.09 + ev.seed) * b * 0.18; x === xa + 4 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); }
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,90,20,.55)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(xa, bot(xa)); for (let x = xa; x < xb; x += 10) ctx.lineTo(x, bot(x)); ctx.stroke();
+        ctx.restore();
+      } else if (world === 'space') {                                            // truss and running lights
+        ctx.strokeStyle = 'rgba(40,48,58,.8)'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = xa; x < xb - 1; x += 22) { ctx.moveTo(x, y - b / 2 + 6); ctx.lineTo(Math.min(xb, x + 22), y + b / 2 - 6); ctx.moveTo(Math.min(xb, x + 22), y - b / 2 + 6); ctx.lineTo(x, y + b / 2 - 6); }
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(xa, y - b / 2 + 2, xb - xa, 2);
+        for (let x = xa + 14; x < xb - 6; x += 44) {
+          const on = Math.sin(time * 4 + x * 0.05) > 0;
+          ctx.fillStyle = on ? '#ff5a5a' : '#5a2020'; ctx.beginPath(); ctx.arc(x, y + b / 2 - 5, 2.2, 0, TAU); ctx.fill();
+        }
+      } else {                                                                   // icicles
+        ctx.fillStyle = 'rgba(220,245,255,.9)';
+        for (let x = xa + 6; x < xb - 4; x += 12) {
+          const h = 6 + ((Math.floor(x) * 5 + Math.floor(ev.seed) * 3) % 13);
+          ctx.beginPath(); ctx.moveTo(x - 3.5, bot(x) - 1); ctx.lineTo(x, bot(x) + h); ctx.lineTo(x + 3.5, bot(x) - 1); ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.moveTo(xa, top(xa) + 3); for (let x = xa; x < xb; x += 10) ctx.lineTo(x, top(x) + 3); ctx.lineTo(xb, top(xb) + 6); ctx.lineTo(xa, top(xa) + 6); ctx.fill();
+      }
     }
-    seg(x0, W + 12);
+    if (world === 'space' && !ev.hatch) {                                        // emitter posts at each opening
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (const gp of gaps) {
+        if (ev.closed.has(gp.i)) continue;
+        for (const ex of [gp.c - gp.w / 2, gp.c + gp.w / 2]) glow(ex, y, 16, '160,140,255', 0.6);
+      }
+      ctx.restore();
+    }
     if (ev.hatch) {
       const gp = gaps[0], half = (gp.w / 2) * (1 - ev.hatchOpen);
       if (half > 0.5) {
         [[gp.c - gp.w / 2, half], [gp.c + gp.w / 2 - half, half]].forEach(([x, w]) => {
-          ctx.fillStyle = '#6b7a80'; ctx.fillRect(x, y - b / 2 + 3, w, b - 6);
+          const hg = ctx.createLinearGradient(0, y - b / 2, 0, y + b / 2); hg.addColorStop(0, '#9aa8ae'); hg.addColorStop(1, '#4d5a60');
+          ctx.fillStyle = hg; ctx.fillRect(x, y - b / 2 + 3, w, b - 6);
           ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2; ctx.strokeRect(x, y - b / 2 + 3, w, b - 6);
-          ctx.fillStyle = 'rgba(255,181,71,.8)'; ctx.fillRect(x, y - 2, w, 4);
+          ctx.fillStyle = 'rgba(255,181,71,.85)'; ctx.fillRect(x, y - 2, w, 4);
         });
       }
     }
     if (['pass', 'crashed', 'recover'].includes(ev.phase)) {
       const gp = gaps[ev.correctIdx] || gaps[0];
-      const gg = ctx.createRadialGradient(gp.c, y, 2, gp.c, y, gp.w * 0.8);
-      gg.addColorStop(0, 'rgba(111,227,207,.35)'); gg.addColorStop(1, 'rgba(111,227,207,0)');
-      ctx.fillStyle = gg; ctx.fillRect(gp.c - gp.w, y - b, gp.w * 2, b * 2);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      glow(gp.c, y, gp.w * 0.8, '111,227,207', 0.35);
+      ctx.restore();
     }
   }
-  function drawSub(x, y, s) {
+
+  /* ---------- Drawing: the bathyscaphe ---------- */
+  function drawSub(x, y, s, tilt) {
     ctx.save();
-    ctx.translate(x, y); ctx.scale(s, s);
-    ctx.fillStyle = '#6d7f86'; ctx.fillRect(-3, 8, 6, 6);
-    ctx.fillStyle = '#d99a36';
-    ctx.beginPath(); ctx.roundRect(-36, -14, 72, 24, 12); ctx.fill();
-    ctx.fillStyle = '#b27a22'; ctx.fillRect(-34, 1, 68, 4);
-    ctx.fillStyle = '#c98b2c'; ctx.beginPath(); ctx.roundRect(-9, -22, 18, 10, 3); ctx.fill();
-    const blade = Math.abs(Math.sin(time * 12)) * 8 + 1;
-    ctx.fillStyle = '#8a969b'; ctx.beginPath(); ctx.ellipse(-40, -2, 2.5, blade, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#9fb3ba'; ctx.beginPath(); ctx.arc(0, 21, 11, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#5d6f76'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(4, 22, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.translate(x, y); ctx.rotate(tilt); ctx.scale(s, s);
+    // stern fins
+    ctx.fillStyle = '#b06a18';
+    ctx.beginPath(); ctx.moveTo(-26, -10); ctx.lineTo(-44, -22); ctx.lineTo(-40, -8); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-26, 8); ctx.lineTo(-44, 18); ctx.lineTo(-40, 5); ctx.closePath(); ctx.fill();
+    // propeller or thruster
+    if (S.world === 'space') {
+      const fl = 14 + Math.sin(time * 40) * 4 + Math.min(20, Math.abs(S.scroll) * 0.02);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const fg = ctx.createLinearGradient(-44, 0, -44 - fl * 1.8, 0);
+      fg.addColorStop(0, 'rgba(200,230,255,.95)'); fg.addColorStop(0.4, 'rgba(120,160,255,.7)'); fg.addColorStop(1, 'rgba(80,60,255,0)');
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(-42, -6); ctx.quadraticCurveTo(-44 - fl * 1.8, 0, -42, 6); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = '#56646b'; ctx.beginPath(); ctx.moveTo(-36, -7); ctx.lineTo(-44, -9); ctx.lineTo(-44, 9); ctx.lineTo(-36, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = '#4f5d63'; ctx.fillRect(-44, -3, 8, 5);
+      const b1 = Math.sin(time * 14) * 10, b2 = Math.cos(time * 14) * 10;
+      ctx.fillStyle = '#9aa7ad';
+      ctx.beginPath(); ctx.ellipse(-46, -1 + b1 / 2, 2.4, Math.abs(b1) / 2 + 1, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-46, -1 - b2 / 2, 2.4, Math.abs(b2) / 2 + 1, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#6d7a80'; ctx.beginPath(); ctx.arc(-46, -1, 2.5, 0, TAU); ctx.fill();
+    }
+    // strut and observation sphere
+    ctx.fillStyle = '#56666d'; ctx.fillRect(-5, 8, 10, 8);
+    const sg = ctx.createRadialGradient(-5, 16, 2, 0, 22, 14);
+    sg.addColorStop(0, '#f0f6f8'); sg.addColorStop(0.5, '#a9bcc3'); sg.addColorStop(1, '#55676e');
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(0, 23, 13, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#3d4b51'; ctx.lineWidth = 1.5; ctx.stroke();
+    const pg = ctx.createRadialGradient(4, 22, 1, 6, 25, 7);
+    pg.addColorStop(0, '#ffe7a8'); pg.addColorStop(0.5, '#ffb547'); pg.addColorStop(1, '#8a4a10');
+    ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(5, 24, 5.5, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#2d383d'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(3.3, 22.3, 1.6, 0, TAU); ctx.fill();
+    // hull
+    const hg = ctx.createLinearGradient(0, -16, 0, 12);
+    hg.addColorStop(0, '#ffe09a'); hg.addColorStop(0.3, '#f4ad3d'); hg.addColorStop(0.75, '#c9791f'); hg.addColorStop(1, '#8a5214');
+    ctx.fillStyle = hg;
+    ctx.beginPath(); ctx.roundRect(-38, -16, 78, 28, 14); ctx.fill();
+    ctx.strokeStyle = 'rgba(90,50,10,.55)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.roundRect(-38, -16, 78, 28, 14); ctx.clip();
+    ctx.fillStyle = 'rgba(255,248,230,.9)'; ctx.fillRect(-40, -1, 82, 3.5);
+    ctx.fillStyle = 'rgba(120,70,20,.5)';
+    for (let rx = -30; rx <= 32; rx += 7) { ctx.beginPath(); ctx.arc(rx, -8, 0.9, 0, TAU); ctx.arc(rx, 7, 0.9, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(-4, -11, 26, 2.6, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+    // conning tower with window
+    const tg = ctx.createLinearGradient(0, -28, 0, -14); tg.addColorStop(0, '#ffd27a'); tg.addColorStop(1, '#c47a20');
+    ctx.fillStyle = tg; ctx.beginPath(); ctx.roundRect(-10, -27, 24, 13, 4); ctx.fill();
+    ctx.fillStyle = '#20414d'; ctx.beginPath(); ctx.roundRect(-5, -24, 13, 5, 2); ctx.fill();
+    ctx.fillStyle = 'rgba(180,240,255,.6)'; ctx.fillRect(-4, -23.5, 5, 1.5);
+    // mast
+    ctx.strokeStyle = '#6d7a80'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(8, -27); ctx.lineTo(8, -36); ctx.stroke();
+    // nose lamp
+    ctx.fillStyle = '#fff4d0'; ctx.beginPath(); ctx.ellipse(38, 5, 3, 4, 0, 0, TAU); ctx.fill();
     ctx.restore();
   }
-  function glow(x, y, r, col, a) {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
-    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  function drawSubGlow(x, y, s, tilt) {
+    const c = Math.cos(tilt), sn = Math.sin(tilt);
+    const at = (px, py) => [x + (px * c - py * sn) * s, y + (px * sn + py * c) * s];
+    const [mx, my] = at(8, -37);
+    if (Math.sin(time * 3) > 0.3) glow(mx, my, 7 * s + 3, '255,80,70', 0.9);
+    const [px, py] = at(5, 24);
+    glow(px, py, 14 * s, '255,200,110', 0.5);
+    if (S.world === 'volcano') glow(x, y, 60 * s, '255,120,40', 0.12);
   }
 
   function draw() {
-    const d = S.depthShown, ev = S.ev;
+    const ev = S.ev;
     const inPlay = ev && (S.mode === 'play' || S.mode === 'paused');
-    const water = waterAt(d), deeper = waterAt(Math.min(MAX_DEPTH, d + 900));
     ctx.save();
     if (shake) ctx.translate(rand(-0.5, 0.5) * shake, rand(-0.5, 0.5) * shake);
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, rgb(water)); bg.addColorStop(1, rgb(deeper));
-    ctx.fillStyle = bg; ctx.fillRect(-20, -20, W + 40, H + 40);
+    drawBackground();
 
-    const shallow = Math.max(0, 1 - d / 350);
-    if (shallow > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 5; i++) {
-        const x = ((i + 0.5) / 5) * W + Math.sin(time * 0.3 + i) * 30;
-        const gr = ctx.createLinearGradient(0, 0, 0, H);
-        gr.addColorStop(0, `rgba(180,230,240,${0.07 * shallow})`); gr.addColorStop(1, 'rgba(180,230,240,0)');
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x - 20, 0); ctx.lineTo(x + 20, 0); ctx.lineTo(x + 90, H); ctx.lineTo(x - 30, H); ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'source-over';
-    }
+    const far = props.filter((p) => p.par < 0.3), near = props.filter((p) => p.par >= 0.3);
+    for (const p of far) drawProp(p);
+    drawDust();
+    for (const p of near) if (p.kind !== 'lavafall' && p.kind !== 'crystal') drawProp(p);
+    drawSideWalls();
+    for (const p of near) if (p.kind === 'lavafall' || p.kind === 'crystal') drawProp(p);
 
-    for (const f of shoals) {
-      ctx.fillStyle = 'rgba(4,22,34,.45)';
-      for (let k = 0; k < f.n; k++) {
-        const fx = f.x - f.dir * k * 14 + Math.sin(k * 2.1) * 6, fy = f.y + Math.sin(k * 1.7 + time * 3) * 8 + (k % 2) * 10;
-        ctx.beginPath(); ctx.ellipse(fx, fy, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(fx - f.dir * 6, fy); ctx.lineTo(fx - f.dir * 11, fy - 3.5); ctx.lineTo(fx - f.dir * 11, fy + 3.5); ctx.fill();
-      }
-    }
-    ctx.fillStyle = 'rgba(225,238,242,.55)';
-    for (const p of snow) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
-
-    if (inPlay && ev.type === 'floor') {
-      const fy = H - Math.min(1, ev.t / 1.8) * H * 0.3;
-      ctx.fillStyle = '#1a2227';
+    if (inPlay && ev.type === 'finish') {
+      const fy = H - Math.min(1, ev.t / 1.6) * H * 0.28;
+      ctx.fillStyle = { ocean: '#1a2227', volcano: '#2a1510', space: '#262a36', ice: '#cfeaf5' }[S.world];
       ctx.beginPath(); ctx.moveTo(0, H);
       for (let x = 0; x <= W; x += 16) ctx.lineTo(x, fy + Math.sin(x * 0.02) * 10 + Math.sin(x * 0.07) * 4);
       ctx.lineTo(W, H); ctx.fill();
     }
 
     let wy = 0;
-    if (inPlay && ev.type === 'shelf') { wy = wallY(ev); drawWall(ev, wy); }
+    if (inPlay && ev.type === 'shelf') { wy = wallY(ev); drawGate(ev, wy); }
 
     const s = subScale();
+    const tilt = clamp(S.vx / 1800, -0.14, 0.14);
     const sy = subY() + Math.sin(time * 1.6) * 3 - (inPlay && ev.type === 'shelf' && ev.phase === 'crashed' ? ev.recoil * 0.2 : 0);
-    drawSub(S.x, sy, s);
+    drawSub(S.x, sy, s, tilt);
 
-    // darkness closes in with depth; the lamp (brighter on a streak) pushes it back
-    const dark = Math.min(0.8, 0.05 + (d / 1300) * 0.75);
-    const lampR = Math.min(W, H) * 0.5 * (1 + Math.min(S.streak, 10) * 0.05) + 70;
-    const lx = S.x, ly = sy + 70;
-    const dg = ctx.createRadialGradient(lx, ly, lampR * 0.2, lx, ly, lampR);
-    dg.addColorStop(0, 'rgba(1,4,9,0)'); dg.addColorStop(1, `rgba(1,4,9,${dark})`);
-    ctx.fillStyle = dg; ctx.fillRect(-20, -20, W + 40, H + 40);
-
-    ctx.globalCompositeOperation = 'lighter';
-    const beam = ctx.createLinearGradient(0, sy + 20, 0, sy + 20 + lampR);
-    beam.addColorStop(0, `rgba(255,181,71,${0.07 + dark * 0.1})`); beam.addColorStop(1, 'rgba(255,181,71,0)');
-    ctx.fillStyle = beam;
-    ctx.beginPath(); ctx.moveTo(lx - 10 * s, sy + 22 * s); ctx.lineTo(lx + 10 * s, sy + 22 * s); ctx.lineTo(lx + lampR * 0.45, sy + 20 + lampR); ctx.lineTo(lx - lampR * 0.45, sy + 20 + lampR); ctx.fill();
-    glow(S.x + 4 * s, sy + 22 * s, 9 * s, '255,210,122', 0.8);
-    ctx.globalCompositeOperation = 'source-over';
-
-    // creatures sit above the darkness so they are always easy to spot
-    for (const k of critters) {
-      if (!k.snapped) {
-        const r = k.c.size * 1.9 + 10 + Math.sin(time * 3 + k.ph) * 3;
-        ctx.globalCompositeOperation = 'lighter';
-        glow(k.x, k.y, r * 1.3, '111,227,207', 0.12 + dark * 0.12);
-        ctx.globalCompositeOperation = 'source-over';
+    // the ocean gets darker the deeper you go; the lamp (brighter on a streak) pushes the dark back
+    if (S.world === 'ocean') {
+      const dark = Math.min(0.75, oceanDepth() * 0.85);
+      if (dark > 0.02) {
+        const lampR = Math.min(W, H) * 0.55 * (1 + Math.min(S.streak % WARP_EVERY, 9) * 0.04) + 80;
+        const dg = ctx.createRadialGradient(S.x, sy + 70, lampR * 0.2, S.x, sy + 70, lampR);
+        dg.addColorStop(0, 'rgba(1,4,9,0)'); dg.addColorStop(1, `rgba(1,4,9,${dark})`);
+        ctx.fillStyle = dg; ctx.fillRect(-20, -20, W + 40, H + 40);
       }
-      if (k.c.kind === 'angler') { ctx.globalCompositeOperation = 'lighter'; glow(k.x + k.dir * k.c.size * 1.5, k.y - k.c.size * 1.1, 26, '180,255,210', 0.7); ctx.globalCompositeOperation = 'source-over'; }
-      drawCritter(k);
+    }
+    if (S.world === 'ocean' || S.world === 'ice') {
+      const lampR = Math.min(W, H) * 0.5 + 60;
+      ctx.globalCompositeOperation = 'lighter';
+      const beam = ctx.createLinearGradient(0, sy + 10, 0, sy + 10 + lampR);
+      beam.addColorStop(0, `rgba(255,200,120,${S.world === 'ice' ? 0.07 : 0.06 + oceanDepth() * 0.1})`); beam.addColorStop(1, 'rgba(255,200,120,0)');
+      ctx.fillStyle = beam;
+      const nx = S.x + 38 * s, ny = sy + 5 * s;
+      ctx.beginPath(); ctx.moveTo(nx - 4, ny); ctx.lineTo(nx + 4, ny); ctx.lineTo(nx + lampR * 0.55, ny + lampR); ctx.lineTo(nx - lampR * 0.35, ny + lampR); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
     }
 
-    ctx.strokeStyle = 'rgba(210,235,242,.6)'; ctx.lineWidth = 1;
-    for (const b of bubbles) { ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of props) drawPropGlow(p);
+    drawSubGlow(S.x, sy, s, tilt);
+    for (const sp of sparks) { ctx.fillStyle = `rgba(${sp.c},${Math.min(1, sp.life * 2)})`; ctx.beginPath(); ctx.arc(sp.x, sp.y, 1.8, 0, TAU); ctx.fill(); }
+    ctx.globalCompositeOperation = 'source-over';
+
+    ctx.strokeStyle = 'rgba(220,240,248,.65)'; ctx.lineWidth = 1;
+    for (const b of bubbles) { ctx.globalAlpha = Math.min(1, b.life); ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, TAU); ctx.stroke(); }
     ctx.globalAlpha = 1;
-    if (camFlash > 0) { ctx.fillStyle = `rgba(255,255,255,${camFlash * 0.35})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+
+    // warp: speed streaks and a colour wash
+    if (inPlay && ev.type === 'warp') {
+      const k = ev.t < 1 ? ev.t : Math.max(0, 1 - (ev.t - 1) / 1.2);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = `rgba(${flashRGB},${0.5 * k})`; ctx.lineWidth = 2;
+      for (let i = 0; i < 40; i++) {
+        const x = (i * 97.3 + Math.floor(time * 30) * 13) % W, y = ((i * 53.7 + time * 2400) % (H + 200)) - 100;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 60 - 120 * k); ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (flash > 0) { ctx.fillStyle = `rgba(${flashRGB},${Math.min(0.85, flash * 0.9)})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+    // soft vignette
+    const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.35)');
+    ctx.fillStyle = vg; ctx.fillRect(-20, -20, W + 40, H + 40);
     ctx.restore();
 
-    drawGauge(d);
     if (inPlay && ev.type === 'shelf') layoutShelf(ev, wy);
   }
   function layoutShelf(ev, y) {
@@ -1328,24 +1777,6 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
     if (ev.hatch) { place(kids[0], W / 2, y, Math.min(W * 0.5, 130), alpha); return; }
     const lw = W / ev.n, w = Math.min(lw - 8, Math.min(lw * 0.74, 150) + 28);
     for (let i = 0; i < kids.length; i++) place(kids[i], laneX(i, ev.n), y, w, alpha);
-  }
-  function drawGauge(d) {
-    const top = 14, bottom = H - 14, x = 12;
-    const yOf = (m) => top + (bottom - top) * Math.sqrt(m / MAX_DEPTH);
-    ctx.strokeStyle = 'rgba(160,195,205,.3)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
-    ctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace';
-    ctx.textBaseline = 'middle';
-    const labels = W >= 620 && (!S.ev || S.ev.type === 'cruise');
-    for (const [m, name] of [...ZONES, [MAX_DEPTH, 'Challenger Deep']]) {
-      const yy = yOf(m);
-      ctx.fillStyle = 'rgba(160,195,205,.55)'; ctx.fillRect(x - 4, yy, 9, 1);
-      if (labels && m > 0) ctx.fillText(`${fmt(m)} m · ${name}`, x + 10, yy);
-    }
-    const yy = yOf(Math.min(MAX_DEPTH, d));
-    ctx.fillStyle = '#ffb547';
-    ctx.beginPath(); ctx.moveTo(x - 5, yy - 5); ctx.lineTo(x + 3, yy); ctx.lineTo(x - 5, yy + 5); ctx.fill();
-    ctx.textBaseline = 'alphabetic';
   }
 
   let last = performance.now();
@@ -1375,13 +1806,14 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); continueDive(); }
       return;
     }
+    if (ev.type !== 'shelf') return;
     if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') {
       if (e.target.classList && e.target.classList.contains('tag')) return;
       e.preventDefault();
-      if (ev.type === 'shelf' && !ev.hatch) chooseLane(laneUnderSub(ev));
-    } else if (/^[1-9]$/.test(e.key)) {
-      if (ev.type === 'shelf') chooseLane(+e.key - 1);
-    } else if (e.key === 's' || e.key === 'S') useSonar();
+      if (!ev.hatch) chooseLane(laneUnderSub(ev));
+    } else if (/^[1-9]$/.test(e.key)) chooseLane(+e.key - 1);
+    else if (ev.card.type === 'tf' && /^[tf]$/i.test(e.key)) chooseLane(e.key.toLowerCase() === 't' ? 0 : 1);
+    else if (e.key === 's' || e.key === 'S') useSonar();
   });
   document.addEventListener('keyup', (e) => { if (KEYMAP[e.key]) keys.delete(KEYMAP[e.key]); });
   window.addEventListener('blur', () => keys.clear());
@@ -1412,24 +1844,41 @@ Roughly what share of Earth's surface is ocean? | About 71% | About 50% | About 
   document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 
   /* ================= Setup ================= */
+  const TYPE_BOXES = { mc: 'tMC', tf: 'tTF', blank: 'tBLANK', type: 'tTYPE' };
   function aiPrompt() {
     const topic = $('topic').value.trim() || '[YOUR TOPIC]';
     const n = $('aiCount').value;
-    return `Make ${n} quiz questions about ${topic}.
+    let types = Object.keys(TYPE_BOXES).filter((k) => $(TYPE_BOXES[k]).checked);
+    if (!types.length) types = ['mc'];
+    const fmtLine = {
+      mc: 'MC | Question | Correct answer | Wrong answer | Wrong answer | Wrong answer',
+      tf: 'TF | A statement that is either true or false | True   (or False)',
+      blank: 'BLANK | A sentence with ___ where one word or phrase is missing | Correct fill | Wrong | Wrong | Wrong',
+      type: 'TYPE | A question with one short, exact answer | Answer',
+    };
+    const example = {
+      mc: 'MC | What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | Helium',
+      tf: 'TF | The Sun is a star. | True',
+      blank: 'BLANK | Plants make food through ___. | photosynthesis | respiration | digestion | osmosis',
+      type: 'TYPE | What is the chemical symbol for gold? | Au',
+    };
+    const mix = types.length > 1 ? `Use a roughly even mix of these question types: ${types.map((k) => TYPE_NAMES[k].toLowerCase()).join(', ')}.` : `Make every question ${TYPE_NAMES[types[0]].toLowerCase()}.`;
+    const rules = ['- Keep every answer short (1 to 6 words).', '- Make wrong answers believable, never silly.', '- Never use the | character inside a question or answer.', '- Mix easy and hard questions.'];
+    if (types.includes('tf')) rules.push('- For TF, make about half the statements false.');
+    if (types.includes('type')) rules.push('- For TYPE, the answer must be 1 to 3 words or a number with no units, spelled the common way.');
+    if (types.includes('blank')) rules.push('- For BLANK, write exactly three underscores ___ where the missing part goes.');
+    return `Make ${n} quiz questions about ${topic}. ${mix}
 
 Reply with only the lines below: no numbering, no headings, no extra text.
 First line: Topic: ${topic}
-Then one question per line in exactly this format:
-Question | Correct answer | Wrong answer | Wrong answer | Wrong answer
+Then one question per line, starting with its type tag, in exactly these formats:
+${types.map((k) => fmtLine[k]).join('\n')}
 
 Rules:
-- Keep every answer short (1 to 6 words).
-- Make the wrong answers believable, never silly.
-- Never use the | character inside a question or answer.
-- Mix easy and hard questions.
+${rules.join('\n')}
 
-Example line:
-What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | Helium`;
+Examples:
+${types.map((k) => example[k]).join('\n')}`;
   }
   function refreshPrompt() { $('aiPrompt').textContent = aiPrompt(); }
   $('btnCopy').addEventListener('click', () => {
@@ -1445,11 +1894,11 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
   });
 
   function toSetup() {
-    S.mode = 'setup'; S.ev = null; S.streak = 0; S.depthTarget = 0;
-    critters = [];
+    S.mode = 'setup'; S.ev = null; S.streak = 0;
     clearLabels();
-    ['crash', 'hatchForm', 'end', 'fact'].forEach((id) => { $(id).hidden = true; });
+    ['crash', 'hatchForm', 'end', 'warp'].forEach((id) => { $(id).hidden = true; });
     setIdle('Paste your questions to plot a dive.');
+    $('rType').textContent = '';
     $('rCount').textContent = 'Dive plan';
     $('setup').hidden = false;
     refreshParse();
@@ -1459,12 +1908,13 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
     const { cards, skipped, topic } = parseDeck($('deck').value);
     if (topic && document.activeElement !== $('topic') && $('topic').value.trim() !== topic) { $('topic').value = topic; refreshPrompt(); }
     const st = $('parseStatus');
-    const playable = cards.length >= 2 || (cards.length === 1 && cards[0].decoys.length > 0);
+    const playable = cards.length >= 2 || (cards.length === 1 && (cards[0].decoys.length > 0 || cards[0].type !== 'mc'));
     if (!cards.length) { st.textContent = 'No questions found yet.'; st.className = 'status warn'; }
     else {
-      const withWrong = cards.filter((c) => c.decoys.length).length;
-      st.textContent = `${cards.length} ${cards.length === 1 ? 'question' : 'questions'} ready` +
-        (withWrong ? ` · ${withWrong} with their own wrong answers` : '') +
+      const counts = {};
+      cards.forEach((c) => { counts[c.type] = (counts[c.type] || 0) + 1; });
+      const breakdown = Object.keys(TYPE_NAMES).filter((k) => counts[k]).map((k) => `${counts[k]} ${TYPE_NAMES[k].toLowerCase()}`).join(', ');
+      st.textContent = `${cards.length} ${cards.length === 1 ? 'question' : 'questions'} ready (${breakdown})` +
         (skipped.length ? ` · ${skipped.length} ${skipped.length === 1 ? 'line' : 'lines'} skipped: “${skipped[0].slice(0, 40)}”` : '') +
         (playable ? '' : ' · add at least one more question');
       st.className = 'status' + (skipped.length || !playable ? ' warn' : '');
@@ -1474,13 +1924,16 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
   }
   function saveSetup() {
     store.set('topic', $('topic').value); store.set('deck', $('deck').value);
-    store.set('pace', document.querySelector('input[name=pace]:checked').value); store.set('typed', $('hatches').checked);
+    store.set('pace', document.querySelector('input[name=pace]:checked').value);
     store.set('aiCount', $('aiCount').value);
+    store.set('startWorld', $('startWorld').value);
+    store.set('types', Object.fromEntries(Object.entries(TYPE_BOXES).map(([k, id]) => [k, $(id).checked])));
   }
   $('deck').addEventListener('input', () => { refreshParse(); saveSetup(); });
   $('topic').addEventListener('input', () => { refreshPrompt(); saveSetup(); });
   $('aiCount').addEventListener('change', () => { refreshPrompt(); saveSetup(); });
-  $('hatches').addEventListener('change', saveSetup);
+  Object.values(TYPE_BOXES).forEach((id) => $(id).addEventListener('change', () => { refreshPrompt(); saveSetup(); }));
+  $('startWorld').addEventListener('change', () => { saveSetup(); setWorld($('startWorld').value); renderHud(true); });
   document.querySelectorAll('input[name=pace]').forEach((el) => el.addEventListener('change', saveSetup));
   $('btnSample').addEventListener('click', () => { $('topic').value = SAMPLE_TOPIC; $('deck').value = SAMPLE; refreshParse(); refreshPrompt(); saveSetup(); });
   $('btnClear').addEventListener('click', () => { $('deck').value = ''; refreshParse(); saveSetup(); $('deck').focus(); });
@@ -1490,7 +1943,7 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
     if (!playable) return;
     S.topic = $('topic').value.trim() || 'Uncharted waters';
     S.pace = document.querySelector('input[name=pace]:checked').value;
-    S.hatches = $('hatches').checked;
+    S.startWorld = $('startWorld').value;
     saveSetup();
     audio();
     startGame(cards, cards);
@@ -1498,7 +1951,7 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
   $('btnAgain').addEventListener('click', () => startGame(S.lastCards, S.fullCards));
   $('btnDrill').addEventListener('click', () => {
     const ids = new Set(S.missed.keys());
-    const cards = S.deck.filter((c) => ids.has(c.id)).map(({ q, a, decoys }) => ({ q, a, decoys }));
+    const cards = S.deck.filter((c) => ids.has(c.id)).map(({ id, ...rest }) => rest);
     if (cards.length) startGame(cards, S.fullCards);
   });
   $('btnEdit').addEventListener('click', toSetup);
@@ -1510,11 +1963,15 @@ What gas do plants absorb from the air? | Carbon dioxide | Oxygen | Nitrogen | H
     $('aiCount').value = String(store.get('aiCount', '20'));
     const paceEl = document.querySelector(`input[name=pace][value="${store.get('pace', 'standard')}"]`);
     if (paceEl) paceEl.checked = true;
-    $('hatches').checked = store.get('typed', false);
+    const sw = store.get('startWorld', 'ocean');
+    $('startWorld').value = WORLDS[sw] ? sw : 'ocean';
+    const types = store.get('types', null);
+    if (types) Object.entries(TYPE_BOXES).forEach(([k, id]) => { if (k in types) $(id).checked = !!types[k]; });
     if (COARSE) $('hint').hidden = true;
     syncSound();
     resize();
     S.x = W / 2;
+    setWorld($('startWorld').value);
     refreshParse();
     refreshPrompt();
     renderHud(true);
