@@ -402,18 +402,6 @@
     space: { name: 'Deep Space', short: 'Space', accent: '180,150,255', flash: '220,210,255' },
     ice: { name: 'Ice Caverns', short: 'Ice', accent: '150,230,255', flash: '220,250,255' },
   };
-  const LINES = {
-    ocean: [
-      ['Sunlight still reaches this far. Reef fish dart about.', 'Warm, bright water. A turtle might paddle by.'],
-      ['The light fades to blue. Things start to glow down here.', 'Twilight water. Whales hunt far below.'],
-      ['No sunlight reaches this deep. Every light you see is alive.', 'The midnight zone. Your lamp is the brightest thing for miles.'],
-      ['Near-freezing water on the abyssal plain.', 'Soft mud below and very little food.'],
-      ['Deep inside the trench now. Very few people have been here.', 'The hadal zone, named after Hades.'],
-    ],
-    volcano: [['Magma glows through cracks in the rock.', 'The heat shield is holding. Embers drift past the porthole.', 'Rivers of lava pour down the walls.']],
-    space: [['Somehow the bathyscaphe works in space too. Nobody asks how.', 'A comet streaks past. Make a wish.', 'Planets drift by in the dark.']],
-    ice: [['Frozen caverns glitter in the lamplight.', 'Crystals hum faintly in the cold.', 'Snow drifts down through the silent caves.']],
-  };
   const OCEAN_ZONES = ['Sunlight zone', 'Twilight zone', 'Midnight zone', 'Abyssal zone', 'Hadal zone'];
   const OCEAN_WATER = [[27, 111, 143], [14, 63, 92], [7, 31, 51], [4, 15, 28], [2, 8, 16]];
   const TYPE_NAMES = { mc: 'Multiple choice', tf: 'True or false', blank: 'Fill in the blank', type: 'Type the answer' };
@@ -636,16 +624,18 @@ BLANK | Hot springs on the seafloor are called hydrothermal ___. | vents | geyse
     for (let i = 0; i < 3; i++) { spawnProp(true); }
   }
 
-  /* ---------- Cruise: a short glide between questions ---------- */
+  /* ---------- A brief pause before the next question (longer only at the very start) ---------- */
   function startCruise(kindOf) {
     clearLabels();
     $('hatchForm').hidden = true; $('crash').hidden = true;
-    S.ev = { type: 'cruise', t: 0, len: kindOf === 'first' ? 3 : rand(2.8, 3.6) };
+    const first = kindOf === 'first';
+    S.ev = { type: 'cruise', t: 0, len: first ? 2.5 : 0.4 };
     S.autoX = null;
-    const set = LINES[S.world][S.world === 'ocean' ? oceanZone() : 0];
-    setIdle(kindOf === 'first' ? (COARSE ? 'Drag on the screen to steer. Questions are coming up.' : 'Steer with ← → or drag. Questions are coming up.') : pick(set));
-    $('rType').textContent = '';
-    $('rCount').textContent = `${S.mastered}/${S.total} answered`;
+    if (first) {
+      setIdle(COARSE ? 'Drag on the screen to steer. The first question is coming up.' : 'Steer with ← → or drag. The first question is coming up.');
+      $('rType').textContent = '';
+      $('rCount').textContent = `0/${S.total} answered`;
+    }
   }
 
   /* ---------- Question gates ---------- */
@@ -1068,7 +1058,7 @@ BLANK | Hot springs on the seafloor are called hydrothermal ___. | vents | geyse
           if (ev.sp >= 1) impactShelf();
         } else if (ev.phase === 'pass') {
           ev.passT += dt;
-          if (ev.passT >= 1) nextAfterAnswer();
+          if (ev.passT >= 0.8) nextAfterAnswer();
         } else if (ev.phase === 'crashed') {
           ev.recoil += (26 - ev.recoil) * Math.min(1, dt * 8);
           ev.crashT += dt;
