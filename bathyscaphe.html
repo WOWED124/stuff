@@ -278,7 +278,7 @@
       <div class="step-head">
         <span class="label">Step 1 · Ask any AI for questions</span>
         <label class="count" for="aiCount">How many
-          <select id="aiCount"><option>10</option><option selected>20</option><option>30</option><option>40</option></select>
+          <select id="aiCount"><option>10</option><option selected>20</option><option>30</option><option>40</option><option>50</option><option>75</option><option>100</option></select>
         </label>
       </div>
       <fieldset class="types">
@@ -305,7 +305,7 @@
           <li><code>BLANK | Sentence with ___ gap | Right | Wrong | Wrong</code> fill in the blank</li>
           <li><code>TYPE | Question | Answer</code> type the answer</li>
         </ul>
-        <p class="help">Lines without a tag count as multiple choice. Numbering, bullets and a <code>Topic:</code> line are fine.</p>
+        <p class="help">Lines without a tag count as multiple choice. Numbering, bullets and a <code>Topic:</code> line are fine. You can paste several replies one after another.</p>
         <p class="status" id="parseStatus"></p>
       </div>
     </div>
@@ -318,6 +318,14 @@
           <label><input type="radio" name="pace" id="paceStandard" value="standard" checked><span>Normal</span></label>
           <label><input type="radio" name="pace" id="paceSwift" value="swift"><span>Quick</span></label>
         </div>
+      </div>
+      <div class="field">
+        <label class="label" for="playCount">Questions per game</label>
+        <select id="playCount">
+          <option value="0">All of them</option>
+          <option value="10">10</option><option value="20">20</option><option value="30">30</option>
+          <option value="50">50</option><option value="75">75</option><option value="100">100</option>
+        </select>
       </div>
       <div class="field">
         <label class="label" for="startWorld">Start in</label>
@@ -501,24 +509,29 @@ BLANK | Hot springs on the seafloor are called hydrothermal ___. | vents | geyse
     set.delete('');
     return [...set];
   }
+  // Edit distance where swapping two neighbouring letters ("teh" for "the") counts as one mistake.
   function lev(a, b) {
     if (a === b) return 0;
-    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-    for (let i = 1; i <= a.length; i++) {
-      const cur = [i];
-      for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      prev = cur;
+    const m = a.length, n = b.length;
+    const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+    for (let j = 1; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
     }
-    return prev[b.length];
+    return d[m][n];
   }
+  // How many letters may be wrong: none for 1 to 2 letter answers, then about one per 3 letters, up to 4.
+  function typoTolerance(len) { return len <= 2 ? 0 : len <= 6 ? 1 : len <= 9 ? 2 : len <= 13 ? 3 : 4; }
   function matches(typed, card) {
     const t = norm(typed).replace(/%$/, '').trim();
     if (!t) return false;
     return [card.a, ...(card.alts || [])].flatMap(variants).some((v) => {
       if (v === t) return true;
       const numeric = /^[\d.\s%]+$/.test(v);
-      const tol = numeric || v.length <= 4 ? 0 : v.length <= 8 ? 1 : Math.floor(v.length * 0.18);
-      return lev(t, v) <= tol;
+      return lev(t, v) <= (numeric ? 0 : typoTolerance(v.length));
     });
   }
 
@@ -1857,7 +1870,8 @@ BLANK | Hot springs on the seafloor are called hydrothermal ___. | vents | geyse
     if (types.includes('tf')) rules.push('- For TF, make about half the statements false.');
     if (types.includes('type')) rules.push('- For TYPE, the answer must be 1 to 3 words or a number with no units, spelled the common way.');
     if (types.includes('blank')) rules.push('- For BLANK, write exactly three underscores ___ where the missing part goes.');
-    return `Make ${n} quiz questions about ${topic}. ${mix}
+    const big = +n >= 50 ? `\nIf you cannot fit all ${n} in one reply, send as many as fit and I will say "continue". Do not repeat questions.\n` : '';
+    return `Make ${n} quiz questions about ${topic}. ${mix}${big}
 
 Reply with only the lines below: no numbering, no headings, no extra text.
 First line: Topic: ${topic}
@@ -1917,12 +1931,14 @@ ${types.map((k) => example[k]).join('\n')}`;
     store.set('pace', document.querySelector('input[name=pace]:checked').value);
     store.set('aiCount', $('aiCount').value);
     store.set('startWorld', $('startWorld').value);
+    store.set('playCount', $('playCount').value);
     store.set('types', Object.fromEntries(Object.entries(TYPE_BOXES).map(([k, id]) => [k, $(id).checked])));
   }
   $('deck').addEventListener('input', () => { refreshParse(); saveSetup(); });
   $('topic').addEventListener('input', () => { refreshPrompt(); saveSetup(); });
   $('aiCount').addEventListener('change', () => { refreshPrompt(); saveSetup(); });
   Object.values(TYPE_BOXES).forEach((id) => $(id).addEventListener('change', () => { refreshPrompt(); saveSetup(); }));
+  $('playCount').addEventListener('change', saveSetup);
   $('startWorld').addEventListener('change', () => { saveSetup(); setWorld($('startWorld').value); renderHud(true); });
   document.querySelectorAll('input[name=pace]').forEach((el) => el.addEventListener('change', saveSetup));
   $('btnSample').addEventListener('click', () => { $('topic').value = SAMPLE_TOPIC; $('deck').value = SAMPLE; refreshParse(); refreshPrompt(); saveSetup(); });
@@ -1934,15 +1950,17 @@ ${types.map((k) => example[k]).join('\n')}`;
     S.topic = $('topic').value.trim() || 'Uncharted waters';
     S.pace = document.querySelector('input[name=pace]:checked').value;
     S.startWorld = $('startWorld').value;
+    S.allCards = cards; S.limit = +$('playCount').value;
     saveSetup();
     audio();
-    startGame(cards, cards);
+    startGame(sampleCards(cards, S.limit), cards);
   });
-  $('btnAgain').addEventListener('click', () => startGame(S.lastCards, S.fullCards));
+  function sampleCards(cards, limit) { return limit > 0 && limit < cards.length ? shuffle([...cards]).slice(0, limit) : cards; }
+  $('btnAgain').addEventListener('click', () => startGame(sampleCards(S.allCards || S.lastCards, S.limit || 0), S.fullCards));
   $('btnDrill').addEventListener('click', () => {
     const ids = new Set(S.missed.keys());
     const cards = S.deck.filter((c) => ids.has(c.id)).map(({ id, ...rest }) => rest);
-    if (cards.length) startGame(cards, S.fullCards);
+    if (cards.length) { S.allCards = cards; S.limit = 0; startGame(cards, S.fullCards); }
   });
   $('btnEdit').addEventListener('click', toSetup);
 
@@ -1953,6 +1971,7 @@ ${types.map((k) => example[k]).join('\n')}`;
     $('aiCount').value = String(store.get('aiCount', '20'));
     const paceEl = document.querySelector(`input[name=pace][value="${store.get('pace', 'standard')}"]`);
     if (paceEl) paceEl.checked = true;
+    $('playCount').value = String(store.get('playCount', '0'));
     const sw = store.get('startWorld', 'ocean');
     $('startWorld').value = WORLDS[sw] ? sw : 'ocean';
     const types = store.get('types', null);
